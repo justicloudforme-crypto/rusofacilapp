@@ -249,6 +249,13 @@ async function main() {
       [join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs"), "scripts/check-internal-links.ts", `--base=${BASE}`, "--plant", "--paths=/es,/ru"],
       { stdio: "inherit" }
     );
+    // Долг 65 (7.302): ссылки за вкладкой и за кнопкой-раскрытием, которых
+    // нет в DOM до нажатия. Обязано быть «поймано 2 из 2».
+    const linksPlantHidden = spawnSync(
+      process.execPath,
+      [join(process.cwd(), "node_modules", "tsx", "dist", "cli.mjs"), "scripts/check-internal-links.ts", `--base=${BASE}`, "--plant-hidden", "--paths=/es,/ru"],
+      { stdio: "inherit" }
+    );
     // Пятой на том же сервере — «несуществующий адрес отдаёт 404 и НАШУ
     // страницу» (долг 129). Здесь, а не отдельным шагом, по той же
     // причине, по какой здесь стоят layout и ссылки: сервер уже поднят.
@@ -627,6 +634,7 @@ async function main() {
       (layout.status ?? 1) ||
       (links.status ?? 1) ||
       (linksPlant.status ?? 1) ||
+      (linksPlantHidden.status ?? 1) ||
       (notFound.status ?? 1) ||
       (nativePayments.status ?? 1) ||
       (nativePaymentsPlant.status ?? 1) ||

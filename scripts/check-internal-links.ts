@@ -32,10 +32,16 @@
  * печатаются только после действия человека. Дека показывает по одному
  * слайду за раз, поэтому обход, который её не листает, видит 1 ссылку
  * из 2 — ровно тот случай, ради которого сторож написан. Поэтому
- * действия перечислены поимённо в EXPANSIONS ниже; страница с
- * неперечисленным действием меряется без него, и число таких страниц
- * печатается в итоге.
+ * действия перечислены поимённо в EXPANSIONS ниже. С 7.302 (долг 65)
+ * там, кроме деки, все вкладки (`role="tab"`) и все кнопки-раскрытия
+ * (`aria-expanded`) на каждой странице; кнопка-раскрытие, оставшаяся не
+ * нажатой, печатается поимённо и краснит прогон. Граница, названная
+ * прямо: «Показать ещё» без `aria-expanded` и переход по страницам списка
+ * обход не нажимает — такой элемент обязан нести `aria-expanded`
+ * (так и требует доступность), иначе сторож его не увидит.
  *
+ *   npx tsx scripts/check-internal-links.ts --plant-hidden     # контроль раскрытий (2 из 2)
+ *   npx tsx scripts/check-internal-links.ts --plant-hidden --no-expand  # тот же контроль как до 7.302 (0 из 2)
  *   npx tsx scripts/check-internal-links.ts                    # набор CI
  *   npx tsx scripts/check-internal-links.ts --plant            # позитивный контроль
  *   npx tsx scripts/check-internal-links.ts --base=https://rusofacilapp.com --from-sitemap
@@ -79,6 +85,16 @@ const FROM_SITEMAP = flag("from-sitemap");
 const SERVER_ONLY = flag("server-only");
 const PLANT = flag("plant");
 /**
+ * ДОЛГ 65 (7.302). Позитивный контроль раскрытий: в каждую страницу
+ * подсаживаются две ссылки, которых НЕТ в DOM, пока человек не нажал —
+ * одна за вкладкой (`role="tab"`), другая за кнопкой-раскрытием
+ * (`aria-expanded="false"`). Сторож обязан поймать обе. С `--no-expand`
+ * (обход как до 7.302, без раскрытий) тот же контроль обязан НЕ поймать
+ * ни одной — так видно, что ловит именно раскрытие.
+ */
+const PLANT_HIDDEN = flag("plant-hidden");
+const NO_EXPAND = flag("no-expand");
+/**
  * Позитивный контроль для отчёта об отказах рендера: первой живой
  * странице обхода документ отдаётся `abort`, то есть она заведомо не
  * рендерится. Сторож обязан назвать её адрес и причину, а не только
@@ -100,6 +116,8 @@ const REQUIRE_CONTENT = flag("require-content");
 
 /** Подсаженная цель позитивного контроля. Такого маршрута нет и быть не может. */
 const PLANTED_HREF = "/es/__planted-broken-link__";
+const PLANTED_TAB_HREF = "/es/__planted-behind-tab__";
+const PLANTED_EXPANDER_HREF = "/es/__planted-behind-expander__";
 
 /**
  * Набор страниц по умолчанию — тот, что переживает пустую базу CI.
@@ -136,7 +154,9 @@ const CI_PATHS = [
 interface Expansion {
   match: RegExp;
   name: string;
-  run: (page: Page) => Promise<void>;
+  /** `grab` снимает ссылки текущего DOM; звать после каждого шага, который
+   *  может выбросить прежнее содержимое (вкладка, слайд). */
+  run: (page: Page, grab: () => Promise<void>) => Promise<void>;
 }
 
 /**
@@ -158,7 +178,7 @@ interface Expansion {
  * проверяет намерения автора файла: любой `await` в области модуля —
  * работа, которую делает импорт.
  */
-async function expandIntroDeck(page: Page): Promise<void> {
+async function expandIntroDeck(page: Page, grab: () => Promise<void>): Promise<void> {
   // Кнопка деки появляется только после гидрации, а ждём мы теперь `load`,
   // который наступает раньше неё. Без этого ожидания первый же `count()`
   // вернул бы 0, дека осталась бы нелистанной — и сторож молча потерял бы
@@ -174,7 +194,80 @@ async function expandIntroDeck(page: Page): Promise<void> {
     if (await next.isDisabled().catch(() => true)) return;
     await next.click({ timeout: 5000 }).catch(() => undefined);
     await page.waitForTimeout(150);
+    await grab();
   }
+}
+
+/**
+ * ДОЛГ 65 (7.302): нажать каждую вкладку (`role="tab"`).
+ *
+ * Вкладка в React — условная отрисовка: содержимое невыбранной вкладки в
+ * DOM отсутствует, и его ссылки обход без нажатия не видит. Замер 7.302 на
+ * наборе CI: за второй вкладкой `/word-games` (кроссворды) — 133 цели на
+ * каждой локали, 266 адресов, которых нет больше ни на одной странице
+ * обхода. Ссылки снимаются после КАЖДОЙ вкладки: следующая выбрасывает
+ * предыдущую из DOM.
+ */
+async function expandTabs(page: Page, grab: () => Promise<void>): Promise<void> {
+  const tabs = page.locator('[role="tab"]');
+  const n = Math.min(await tabs.count().catch(() => 0), 40);
+  for (let i = 0; i < n; i += 1) {
+    const tab = tabs.nth(i);
+    if (!(await tab.isVisible().catch(() => false))) continue;
+    await tab.click({ timeout: 3000 }).catch(() => undefined);
+    await page.waitForTimeout(200);
+    await grab();
+  }
+}
+
+/**
+ * ДОЛГ 65 (7.302): нажать каждую видимую кнопку-раскрытие
+ * (`button[aria-expanded="false"]`) — меню «Practicar», мобильное меню,
+ * переключатель языка, аккордеоны.
+ *
+ * `aria-expanded` — обещание доступности «эта кнопка только раскрывает»,
+ * поэтому нажимать её безопасно: она не покупает, не выходит и не пишет.
+ * Если нажатие всё-таки увело страницу, раскрытие на ней останавливается
+ * (адрес сверяется после каждого нажатия). Вложенные раскрытия (кнопка
+ * внутри открытого меню) находятся повторным поиском; каждая кнопка
+ * помечается и нажимается один раз; потолок — 30 нажатий на страницу.
+ *
+ * Закрытые `<details>` здесь не нужны и не перечислены: их содержимое
+ * лежит в DOM и закрытым, сторож видит его ссылки без нажатия (замер 7.302:
+ * 40 закрытых `<details>` на наборе CI — 0 новых целей после открытия).
+ */
+async function expandDisclosures(page: Page, grab: () => Promise<void>): Promise<void> {
+  const startUrl = page.url();
+  for (let i = 0; i < 30; i += 1) {
+    const button = page.locator('button[aria-expanded="false"]:not([data-linkcheck-pressed])').filter({ visible: true }).first();
+    if ((await button.count().catch(() => 0)) === 0) return;
+    await button.evaluate((el) => el.setAttribute("data-linkcheck-pressed", "1")).catch(() => undefined);
+    await button.click({ timeout: 3000 }).catch(() => undefined);
+    await page.waitForTimeout(200);
+    if (page.url() !== startUrl) return;
+    await grab();
+    // Открытое меню может перекрыть следующую кнопку — закрываем его.
+    await page.keyboard.press("Escape").catch(() => undefined);
+    await page.waitForTimeout(50);
+  }
+}
+
+/**
+ * Сколько органов раскрытия на странице осталось НЕ нажатыми после всех
+ * раскрытий. Это и есть «неперечисленное действие» из шапки файла, только
+ * теперь посчитанное, а не предположенное: число печатается поимённо по
+ * страницам, и не ноль краснит прогон CI.
+ */
+async function untouchedControls(page: Page): Promise<number> {
+  return page
+    .evaluate(() => {
+      const visible = (el: Element) => {
+        const r = (el as HTMLElement).getBoundingClientRect();
+        return r.width > 0 && r.height > 0;
+      };
+      return [...document.querySelectorAll('button[aria-expanded="false"]:not([data-linkcheck-pressed])')].filter(visible).length;
+    })
+    .catch(() => 0);
 }
 
 /**
@@ -187,6 +280,8 @@ async function expandIntroDeck(page: Page): Promise<void> {
  */
 const EXPANSIONS: Expansion[] = [
   { match: /\/(es|ru)\/courses$/, name: "вводная дека: пролистать все слайды", run: expandIntroDeck },
+  { match: /./, name: "вкладки: нажать каждую", run: expandTabs },
+  { match: /./, name: "кнопки-раскрытия aria-expanded: нажать каждую", run: expandDisclosures },
 ];
 
 interface Edge { target: string; from: string; source: "server" | "rendered" }
@@ -328,7 +423,9 @@ async function waitForLinksToSettle(page: Page): Promise<void> {
   }
 }
 
-async function renderedHrefs(browser: Browser, url: string, plantFailure = false): Promise<string[] | RenderFailure> {
+interface Rendered { hrefs: string[]; byExpansion: Map<string, string[]>; untouched: number }
+
+async function renderedHrefs(browser: Browser, url: string, plantFailure = false): Promise<Rendered | RenderFailure> {
   const ctx = await browser.newContext({ userAgent: "rusofacilapp-linkcheck-rendered/1.0" });
   if (PLANT) {
     // Подсадка живёт в самой странице, а не в разборе: контроль обязан
@@ -340,6 +437,40 @@ async function renderedHrefs(browser: Browser, url: string, plantFailure = false
         a.setAttribute("href", ${JSON.stringify(PLANTED_HREF)});
         a.textContent = "planted";
         document.body.appendChild(a);
+      });
+    `);
+  }
+  if (PLANT_HIDDEN) {
+    // Ссылок в DOM нет, пока не нажали: ровно класс долга 65.
+    await ctx.addInitScript(`
+      addEventListener("DOMContentLoaded", () => {
+        const box = document.createElement("div");
+        const tab = document.createElement("button");
+        tab.setAttribute("role", "tab");
+        tab.textContent = "planted tab";
+        tab.addEventListener("click", () => {
+          if (box.querySelector("[data-planted-tab]")) return;
+          const a = document.createElement("a");
+          a.setAttribute("href", ${JSON.stringify(PLANTED_TAB_HREF)});
+          a.setAttribute("data-planted-tab", "1");
+          a.textContent = "planted behind tab";
+          box.appendChild(a);
+        });
+        const exp = document.createElement("button");
+        exp.setAttribute("aria-expanded", "false");
+        exp.textContent = "planted expander";
+        exp.addEventListener("click", () => {
+          exp.setAttribute("aria-expanded", "true");
+          const a = document.createElement("a");
+          a.setAttribute("href", ${JSON.stringify(PLANTED_EXPANDER_HREF)});
+          a.textContent = "planted behind expander";
+          box.appendChild(a);
+        });
+        box.append(tab, exp);
+        // В конец body и поверх всего: начало body React при гидратации
+        // перерисовывает, а нижнее меню перекрыло бы нажатие.
+        box.style.cssText = "position:relative;z-index:2147483647;background:#fff";
+        document.body.appendChild(box);
       });
     `);
   }
@@ -369,16 +500,19 @@ async function renderedHrefs(browser: Browser, url: string, plantFailure = false
       hrefs.forEach((h) => collected.add(h));
     };
     await grab();
-    for (const step of EXPANSIONS) {
+    const byExpansion = new Map<string, string[]>();
+    for (const step of NO_EXPAND ? [] : EXPANSIONS) {
       if (!step.match.test(url)) continue;
       // Ссылки снимаются ПОСЛЕ каждого шага, а не один раз в конце:
-      // дека выбрасывает предыдущий слайд из DOM.
-      const before = collected.size;
-      await step.run(page);
+      // дека выбрасывает предыдущий слайд из DOM. Что дал шаг — пишется
+      // отдельно, чтобы итог называл раскрытие, а не только сумму.
+      const before = new Set(collected);
+      await step.run(page, grab);
       await grab();
-      void before;
+      byExpansion.set(step.name, [...collected].filter((h) => !before.has(h)));
     }
-    return [...collected];
+    const untouched = NO_EXPAND ? 0 : await untouchedControls(page);
+    return { hrefs: [...collected], byExpansion, untouched };
   } catch (error) {
     // ДОЛГ 66 закрыт здесь. Раньше стояло `catch { return null }`, наверх
     // шёл только счётчик, и назвать не отрендерившиеся страницы было
@@ -395,7 +529,7 @@ async function renderedHrefs(browser: Browser, url: string, plantFailure = false
   }
 }
 
-const isRenderFailure = (r: string[] | RenderFailure): r is RenderFailure => !Array.isArray(r);
+const isRenderFailure = (r: Rendered | RenderFailure): r is RenderFailure => "reason" in r;
 
 async function main() {
   const pages = await seedPages();
@@ -416,6 +550,8 @@ async function main() {
 
   // --- Источник 2: отрендеренный DOM. ---
   const expanded = new Set<string>();
+  const expansionTargets = new Map<string, Set<string>>();
+  const untouchedByPage: { url: string; n: number }[] = [];
   let plantedRenderFailurePage: string | undefined;
   if (!SERVER_ONLY) {
     const browser = await chromium.launch();
@@ -427,8 +563,16 @@ async function main() {
         renderFailures.push(hrefs);
         return;
       }
-      if (EXPANSIONS.some((e) => e.match.test(url))) expanded.add(url);
-      for (const h of hrefs) {
+      for (const [name, added] of hrefs.byExpansion) {
+        if (!expansionTargets.has(name)) expansionTargets.set(name, new Set());
+        for (const h of added) {
+          const t = normalizeUrl(h, url, ORIGIN);
+          if (t) expansionTargets.get(name)!.add(t);
+        }
+        if (added.length) expanded.add(url);
+      }
+      if (hrefs.untouched > 0) untouchedByPage.push({ url, n: hrefs.untouched });
+      for (const h of hrefs.hrefs) {
         const t = normalizeUrl(h, url, ORIGIN);
         if (t) edges.push({ target: t, from: url, source: "rendered" });
       }
@@ -467,7 +611,20 @@ async function main() {
   console.log(`ссылок (страница → цель): ${edges.length}`);
   console.log(`различных целей: ${targets.length}`);
   console.log(`целей, которых нет в серверном HTML (только после гидрации): ${onlyAfterHydration.length}`);
-  console.log(`страниц с раскрытием (${EXPANSIONS.map((e) => e.name).join("; ")}): ${expanded.size}`);
+  console.log(`страниц, где раскрытие добавило ссылки: ${expanded.size}${NO_EXPAND ? " (раскрытия выключены: --no-expand)" : ""}`);
+  // Сколько целей видно ТОЛЬКО благодаря раскрытию — то есть сколько
+  // адресов сторож без него не проверил бы вовсе (нет нигде больше).
+  const seenWithoutExpansion = new Set<string>(edges.filter((e) => e.source === "server").map((e) => e.target));
+  for (const [name, set] of expansionTargets) {
+    console.log(`  раскрытие «${name}»: новых для страницы целей ${set.size}`);
+  }
+  const allExpansion = new Set([...expansionTargets.values()].flatMap((s) => [...s]));
+  const onlyViaExpansion = [...allExpansion].filter((t) => !seenWithoutExpansion.has(t));
+  console.log(`  целей, которых нет в серверном HTML ни одной страницы и которые видны только после раскрытия: ${onlyViaExpansion.length}`);
+  console.log(`органов раскрытия, оставшихся не нажатыми: ${untouchedByPage.reduce((a, b) => a + b.n, 0)}`);
+  for (const u of [...untouchedByPage].sort((a, b) => a.url.localeCompare(b.url))) {
+    console.log(`  ✗ ${u.url.slice(ORIGIN.length)}: ${u.n}`);
+  }
   console.log(`страниц, которые не отрендерились: ${renderFailures.length}`);
   // Поимённо и с причиной — всегда, а не «в отладочном режиме». Число без
   // состава не позволяет ни проверить гипотезу о причине, ни сравнить два
@@ -500,6 +657,18 @@ async function main() {
     return;
   }
 
+  if (PLANT_HIDDEN) {
+    const tab = fatal.some((b) => b.target.endsWith(PLANTED_TAB_HREF));
+    const exp = fatal.some((b) => b.target.endsWith(PLANTED_EXPANDER_HREF));
+    const caught = Number(tab) + Number(exp);
+    console.log(`\nпозитивный контроль раскрытий${NO_EXPAND ? " (--no-expand, как до 7.302)" : ""}: подсажено 2 (за вкладкой, за кнопкой-раскрытием), поймано ${caught} из 2`);
+    console.log(`кроме подсадки не прошедших разбор целей: ${fatal.filter((b) => !b.target.endsWith(PLANTED_TAB_HREF) && !b.target.endsWith(PLANTED_EXPANDER_HREF)).length}`);
+    // Без раскрытий контроль обязан быть СЛЕП (0 из 2) — это доказательство,
+    // что ловит раскрытие, а не что-то ещё.
+    process.exitCode = NO_EXPAND ? (caught === 0 ? 0 : 1) : caught === 2 ? 0 : 1;
+    return;
+  }
+
   if (PLANT) {
     const caught = fatal.filter((b) => b.target.endsWith(PLANTED_HREF)).length;
     console.log(`\nпозитивный контроль: подсажено 1, поймано ${caught} из 1`);
@@ -517,6 +686,15 @@ async function main() {
   const alive = [...pageStatus.values()].filter((s) => s === 200).length;
   if (alive < Math.ceil(pages.length / 2)) {
     console.log(`\nпол обхода не взят: 200 отдали ${alive} страниц из ${pages.length}`);
+    process.exitCode = 1;
+    return;
+  }
+  // Долг 65: орган раскрытия, который обход не нажал, — непроверенные
+  // ссылки. Не ноль краснит прогон, чтобы новый вид раскрытия перечислили
+  // в EXPANSIONS, а не узнали о его битой ссылке от человека.
+  const untouchedTotal = untouchedByPage.reduce((a, b) => a + b.n, 0);
+  if (untouchedTotal > 0) {
+    console.log(`\nне нажато органов раскрытия: ${untouchedTotal} — их ссылки не проверены`);
     process.exitCode = 1;
     return;
   }
