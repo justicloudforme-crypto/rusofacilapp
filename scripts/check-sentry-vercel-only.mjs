@@ -455,7 +455,8 @@ async function main() {
 }
 
 // Скрипт ничего не делает на импорте — правило src/lib/entry-point.test.ts.
-if (process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href) {
+const IS_ENTRY_POINT = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+if (IS_ENTRY_POINT) {
   main().then(
     () => process.exit(0),
     (e) => fail([String(e?.stack ?? e)]),
