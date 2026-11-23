@@ -12,7 +12,21 @@ import {
 } from "serwist";
 import type { PrecacheEntry, SerwistGlobalConfig, SerwistPlugin } from "serwist";
 import { SIGNED_OUT_MESSAGE, createSignedOutLock } from "@/lib/signed-out-lock";
-import { GENERATION_CACHE_NAME, GENERATION_KEY, buildFingerprint, pageCacheNames, staleCacheNames } from "@/lib/sw-cache-names";
+import {
+  CARRIED_CACHE_NAME,
+  type CarriedDoc,
+  type CarriedGeneration,
+  GENERATIONS_KEY,
+  GENERATION_CACHE_NAME,
+  GENERATION_KEY,
+  MAX_CARRIED_GENERATIONS,
+  buildFingerprint,
+  carriedFingerprints,
+  pageCacheNames,
+  planCarriedGenerations,
+  staleCacheNames,
+} from "@/lib/sw-cache-names";
+import { OFFLINE_INDEX_PATH, parseIndex } from "@/lib/offline-save";
 import {
   AUDIO_CACHE_NAME,
   CACHE_BUDGET_BY_KEY,
@@ -326,10 +340,18 @@ const CLOSED_CONTENT_NOT_STORED: SerwistPlugin = {
     if (!response || response.status !== 200) return null;
     const closed = response.redirected || looksClosedForThisVisitor(await response.clone().text());
     if (!closed) return response;
-    // Стереть прежнюю копию — это и есть вторая половина правила.
+    // Стереть прежнюю копию — это и есть вторая половина правила. Во ВСЕХ
+    // поколениях, а не только в текущем (7.301, долг 308): просмотренное
+    // теперь переживает несколько выкатов, и копия прошлой сборки иначе
+    // пережила бы конец подписки. Открывается только существующее.
     try {
-      const cache = await caches.open(CACHES.content);
-      await cache.delete(request, { ignoreVary: true });
+      const names = (await caches.keys()).filter(
+        (name) => name === CACHES.content || /^rf-pages-(?:content|section)-[a-z0-9]+$/.test(name),
+      );
+      for (const name of names) {
+        const cache = await caches.open(name);
+        await cache.delete(request, { ignoreVary: true });
+      }
     } catch {
       // Кеша может не быть вовсе — тогда стирать нечего.
     }
@@ -386,22 +408,84 @@ async function dropCachedPaymentPages(): Promise<void> {
   }
 }
 
+/**
+ * Снимок переносимых кешей одного отпечатка: адреса копий и самое свежее
+ * `savedAt` описи. Открывается ТОЛЬКО то, что есть в живом списке:
+ * `caches.open` на отсутствующем имени завёл бы пустой кеш (долг 391).
+ */
+async function snapshotGeneration(fingerprint: string, existing: readonly string[]): Promise<CarriedGeneration> {
+  const names = pageCacheNames(fingerprint);
+  const docs: CarriedDoc[] = [];
+  let newestSavedAt: number | null = null;
+  for (const kind of ["content", "section"] as const) {
+    if (!existing.includes(names[kind])) continue;
+    const cache = await caches.open(names[kind]);
+    for (const request of await cache.keys()) {
+      let path = "";
+      try {
+        path = new URL(request.url).pathname;
+      } catch {
+        continue;
+      }
+      if (path === OFFLINE_INDEX_PATH) {
+        const rows = parseIndex(await (await cache.match(request))?.json().catch(() => null));
+        for (const row of rows) newestSavedAt = Math.max(newestSavedAt ?? 0, row.savedAt);
+        continue;
+      }
+      docs.push({ kind, url: request.url });
+    }
+  }
+  return { fingerprint, docs, newestSavedAt };
+}
+
+/** История поколений из метки; у установки до 7.301 — одна прежняя метка. */
+async function readGenerationHistory(marker: Cache): Promise<string[]> {
+  const list = await marker
+    .match(GENERATIONS_KEY)
+    .then((hit) => (hit ? hit.json() : null))
+    .catch(() => null);
+  if (Array.isArray(list)) return list.filter((fp): fp is string => typeof fp === "string");
+  const previous = await marker
+    .match(GENERATION_KEY)
+    .then((hit) => (hit ? hit.text() : null))
+    .catch(() => null);
+  return previous ? [previous] : [];
+}
+
 // Whatever the previous build (or the pre-fix, fixed-name config) left
 // behind is dead weight the moment this worker activates.
+//
+// ДОЛГ 308, ЗАХОД 7.301: просмотренное прошлых поколений уходит не по
+// счёту выкатов, а по содержимому — `planCarriedGenerations` (правила и
+// причина — там). Метка поколения теперь хранит историю, новые первыми.
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
       const existing = await caches.keys();
-      // Предыдущее поколение — из метки (заход 7.237, строка 308): его
-      // просмотренные копии переживают этот выкат, следующий — уже нет.
+      await Promise.all(staleCacheNames(existing, FINGERPRINT).map((name) => caches.delete(name)));
       const marker = await caches.open(GENERATION_CACHE_NAME);
-      const previous = await marker
-        .match(GENERATION_KEY)
-        .then((hit) => (hit ? hit.text() : null))
-        .catch(() => null);
-      const carriedFrom = previous && previous !== FINGERPRINT ? previous : null;
-      await Promise.all(staleCacheNames(existing, FINGERPRINT, carriedFrom).map((name) => caches.delete(name)));
+      const history = await readGenerationHistory(marker);
+      const carried = existing.filter((name) => CARRIED_CACHE_NAME.test(name));
+      const generations = await Promise.all(
+        carriedFingerprints(carried).map((fp) => snapshotGeneration(fp, carried).catch(() => ({ fingerprint: fp, docs: [], newestSavedAt: null }))),
+      );
+      const budget = CACHE_BUDGET_BY_KEY.content;
+      const plan = planCarriedGenerations({
+        current: FINGERPRINT,
+        history,
+        generations,
+        now: Date.now(),
+        maxDocs: budget.maxEntries,
+        maxAgeMs: budget.maxAgeSeconds * 1000,
+        maxGenerations: MAX_CARRIED_GENERATIONS,
+      });
+      await Promise.all(plan.dropCaches.filter((name) => carried.includes(name)).map((name) => caches.delete(name)));
+      for (const { cacheName, url } of plan.dropEntries) {
+        if (!(await caches.has(cacheName))) continue;
+        await (await caches.open(cacheName)).delete(url, { ignoreVary: true }).catch(() => false);
+      }
       await marker.put(GENERATION_KEY, new Response(FINGERPRINT)).catch(() => {});
+      await marker.put(GENERATIONS_KEY, new Response(JSON.stringify(plan.history))).catch(() => {});
       await dropCachedPaymentPages();
     })()
   );
