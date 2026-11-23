@@ -293,11 +293,11 @@ describe("удаление скачанного", () => {
 });
 
 describe("имя кеша скачанного держит два обещания сразу", () => {
-  it("выкат сайта его НЕ уносит — при любом отпечатке (а позапрошлый кеш содержания уносит: контроль)", () => {
-    const live = [pageCacheNames("aaa").content, pageCacheNames("aaa").downloads];
-    // «ccc» — предыдущее поколение по метке, значит «aaa» — позапрошлое:
-    // просмотренное переживает только один выкат (7.237, строка 308).
-    expect(staleCacheNames(live, "bbb", "ccc")).toEqual([pageCacheNames("aaa").content]);
+  it("выкат сайта его НЕ уносит — при любом отпечатке (а чужой кеш документов уносит: контроль)", () => {
+    const live = [pageCacheNames("aaa").others, pageCacheNames("aaa").downloads];
+    // Кеш документов чужой сборки уходит всегда; просмотренное прошлых
+    // поколений решает `planCarriedGenerations` (7.301, долг 308).
+    expect(staleCacheNames(live, "bbb")).toEqual([pageCacheNames("aaa").others]);
     expect(staleCacheNames(live, "aaa")).toEqual([]);
     expect(pageCacheNames("bbb").downloads).toBe(pageCacheNames("aaa").downloads);
   });

@@ -137,7 +137,13 @@ export async function saveCopy(deps: SaveDeps): Promise<SaveOutcome> {
     const rows = await readIndex(deps.caches, deps.names, deps.url);
 
     if (looksClosedForThisVisitor(deps.html)) {
-      for (const name of [deps.names.content, deps.names.section]) {
+      // Во ВСЕХ поколениях (7.301, долг 308): копия прошлой сборки теперь
+      // переживает несколько выкатов и не должна пережить конец подписки.
+      // Чужие поколения — только из живого списка: `open` завёл бы пустой кеш.
+      const older = (await deps.caches.keys().catch(() => [] as string[])).filter((name) =>
+        /^rf-pages-(?:content|section)-[a-z0-9]+$/.test(name),
+      );
+      for (const name of new Set([deps.names.content, deps.names.section, ...older])) {
         const cache = await deps.caches.open(name);
         await cache.delete(deps.url, { ignoreVary: true });
       }
