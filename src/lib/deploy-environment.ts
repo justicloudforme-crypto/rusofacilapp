@@ -86,10 +86,27 @@ export function currentPlatform(): string | null {
   return (globalThis as { process?: { platform?: string } }).process?.platform ?? null;
 }
 
-/** `platform: null` — ОС неизвестна (краевая среда); правило закрыто. */
-export function mayReportServerSentry(
+/**
+ * ОБЩЕЕ ПРАВИЛО «ЭТО НАСТОЯЩИЙ СЕРВЕР VERCEL» (7.302): три признака выше.
+ * Им открываются всё, что из `.env` дотягивается до боевых служб с
+ * сервера: Sentry (`mayReportServerSentry`, долг 416, 7.301) и кеш Upstash
+ * (`src/lib/redis.ts`, 7.302 — до него кеш открывался одной `VERCEL_ENV`,
+ * и ручная `VERCEL_ENV` на Маке писала в боевой кеш). Копий правила нет:
+ * `check:sentry-vercel-only` краснеет, если Sentry или кеш судят иначе.
+ *
+ * `platform: null` — ОС неизвестна (краевая среда); правило закрыто.
+ */
+export function isRealVercelServer(
   env: NodeJS.ProcessEnv = process.env,
   platform: string | null = currentPlatform(),
 ): boolean {
   return isDeployedEnvironment(env) && env.VERCEL === "1" && platform === "linux";
+}
+
+/** Право слать события в боевой Sentry с сервера — то же общее правило. */
+export function mayReportServerSentry(
+  env: NodeJS.ProcessEnv = process.env,
+  platform: string | null = currentPlatform(),
+): boolean {
+  return isRealVercelServer(env, platform);
 }

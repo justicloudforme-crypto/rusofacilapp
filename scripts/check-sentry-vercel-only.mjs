@@ -8,6 +8,15 @@
 // Теперь ворота — `mayReportServerSentry` (`src/lib/deploy-environment.ts`):
 // `VERCEL_ENV` + `VERCEL=1` + ОС процесса Linux (ОС — не переменная).
 //
+// 7.302: ТЕМ ЖЕ ПРАВИЛОМ ОТКРЫВАЕТСЯ КЕШ UPSTASH. Правило вынесено в общую
+// `isRealVercelServer` (там же); `mayReportServerSentry` и `src/lib/redis.ts`
+// зовут её, а не держат свою копию. До 7.302 кеш судил по одной
+// `VERCEL_ENV`, и ручная переменная на Маке открывала боевой кеш из `.env`.
+// Сторож теперь краснеет и на кеше: исходник `redis.ts`, подсадки, и в живом
+// запуске адрес Upstash смотрит на тот же приёмник — Мак: 0 запросов к
+// кешу; Linux с признаками Vercel: запросы есть (кеш на Vercel работает);
+// Linux с одной `VERCEL_ENV`: 0.
+//
 // Сторож проверяет ТРИ слоя.
 //
 //  1. Исходник (всегда): оба серверных конфига Sentry и отчёт о ключах Stripe
@@ -104,16 +113,43 @@ export function checkInstrumentation(source) {
   return problems;
 }
 
-/** Само правило: оба признака на месте. */
+/** Тело экспортируемой функции (до первой `}` в нулевой колонке). */
+function fnBody(source, name) {
+  const start = source.indexOf(`export function ${name}`);
+  if (start < 0) return null;
+  return source.slice(start, source.indexOf("\n}\n", start) + 2);
+}
+
+/** Само правило: все три признака на месте, и Sentry зовёт общее правило. */
 export function checkRule(source) {
-  const start = source.indexOf("export function mayReportServerSentry");
-  if (start < 0) return ["src/lib/deploy-environment.ts: нет mayReportServerSentry"];
-  const body = source.slice(start, source.indexOf("\n}\n", start) + 2);
+  const body = fnBody(source, "isRealVercelServer");
+  if (body === null) return ["src/lib/deploy-environment.ts: нет общего правила isRealVercelServer"];
   const problems = [];
-  if (!/env\.VERCEL\s*===\s*"1"/.test(body)) problems.push("mayReportServerSentry не требует VERCEL === \"1\"");
-  if (!/platform\s*===\s*"linux"/.test(body)) problems.push("mayReportServerSentry не требует ОС linux");
-  if (!/isDeployedEnvironment\(env\)/.test(body)) problems.push("mayReportServerSentry не требует VERCEL_ENV");
-  if (/\|\|/.test(body)) problems.push("mayReportServerSentry содержит «или» — признаки должны требоваться ВСЕ");
+  if (!/env\.VERCEL\s*===\s*"1"/.test(body)) problems.push("isRealVercelServer не требует VERCEL === \"1\"");
+  if (!/platform\s*===\s*"linux"/.test(body)) problems.push("isRealVercelServer не требует ОС linux");
+  if (!/isDeployedEnvironment\(env\)/.test(body)) problems.push("isRealVercelServer не требует VERCEL_ENV");
+  if (/\|\|/.test(body)) problems.push("isRealVercelServer содержит «или» — признаки должны требоваться ВСЕ");
+  const sentry = fnBody(source, "mayReportServerSentry");
+  if (sentry === null) problems.push("src/lib/deploy-environment.ts: нет mayReportServerSentry");
+  else if (!/return\s+isRealVercelServer\(\s*env\s*,\s*platform\s*\)\s*;/.test(sentry) || /VERCEL|linux/.test(sentry.replace(/^[^{]*\{/, ""))) {
+    problems.push("mayReportServerSentry не сводится к isRealVercelServer(env, platform) — копия правила");
+  }
+  return problems;
+}
+
+/** Кеш Upstash (7.302): клиент создаётся только под общим правилом. */
+export function checkRedis(source) {
+  const problems = [];
+  if (!/import\s*\{\s*isRealVercelServer\s*\}\s*from\s*"\.\/deploy-environment"/.test(source)) {
+    problems.push("src/lib/redis.ts: не импортирует isRealVercelServer из ./deploy-environment");
+  }
+  const gate = source.search(/if\s*\(\s*!isRealVercelServer\(\s*\)\s*\)\s*return\s+null\s*;/);
+  const client = source.indexOf("new Redis(");
+  if (gate < 0) problems.push("src/lib/redis.ts: клиент Upstash не закрыт `if (!isRealVercelServer()) return null;`");
+  else if (client >= 0 && gate > client) problems.push("src/lib/redis.ts: ворота стоят ПОСЛЕ new Redis(");
+  if (/isDeployedEnvironment|VERCEL_ENV|getDeployEnvironment/.test(source.replace(/\/\/[^\n]*/g, ""))) {
+    problems.push("src/lib/redis.ts: кеш снова судит по одной VERCEL_ENV");
+  }
   return problems;
 }
 
@@ -141,6 +177,7 @@ function checkSource() {
     ...checkSentryConfig("sentry.edge.config.ts", readFileSync("./sentry.edge.config.ts", "utf8")),
     ...checkInstrumentation(readFileSync("./src/instrumentation.ts", "utf8")),
     ...checkRule(readFileSync("./src/lib/deploy-environment.ts", "utf8")),
+    ...checkRedis(readFileSync("./src/lib/redis.ts", "utf8")),
     ...findEdgeRuntime(srcFiles).map(
       (f) =>
         `${f}: краевая среда (runtime "edge") — там у Vercel нет process.platform, и Sentry этого кода молчал бы. ` +
@@ -177,19 +214,33 @@ function envNamesToBlank() {
 
 function startReceiver() {
   const envelopes = [];
+  const upstash = [];
   const server = createServer((req, res) => {
     const chunks = [];
     req.on("data", (c) => chunks.push(c));
     req.on("end", () => {
       if (req.method === "POST" && /\/api\/\d+\/envelope\//.test(req.url ?? "")) {
         envelopes.push(Buffer.concat(chunks).toString("utf8"));
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end("{}");
+        return;
+      }
+      if ((req.url ?? "").startsWith("/upstash")) {
+        // Кеш Upstash (7.302): любой запрос сюда — сервер открыл кеш.
+        // Ответ — «пусто», как у настоящего REST Upstash на промах.
+        upstash.push(`${req.method} ${req.url}`);
+        const body = Buffer.concat(chunks).toString("utf8");
+        const many = body.trim().startsWith("[[");
+        res.writeHead(200, { "content-type": "application/json" });
+        res.end(many ? JSON.stringify(JSON.parse(body).map(() => ({ result: null }))) : '{"result":null}');
+        return;
       }
       res.writeHead(200, { "content-type": "application/json" });
       res.end("{}");
     });
   });
   return new Promise((resolve) => {
-    server.listen(0, "127.0.0.1", () => resolve({ server, envelopes, port: server.address().port }));
+    server.listen(0, "127.0.0.1", () => resolve({ server, envelopes, upstash, port: server.address().port }));
   });
 }
 
@@ -206,6 +257,7 @@ async function freePort() {
 /** Один `next start` в заданном окружении; вернуть, что дошло до приёмника. */
 async function bootOnce(label, receiver, extraEnv) {
   const before = receiver.envelopes.length;
+  const upstashBefore = receiver.upstash.length;
   const port = await freePort();
   const env = { ...process.env };
   for (const name of envNamesToBlank()) env[name] = "";
@@ -213,6 +265,9 @@ async function bootOnce(label, receiver, extraEnv) {
   delete env.VERCEL_ENV;
   Object.assign(env, {
     SENTRY_DSN: `http://publickey@127.0.0.1:${receiver.port}/1`,
+    // Кеш смотрит на тот же приёмник: ни боевой Upstash, ни сеть.
+    UPSTASH_REDIS_REST_URL: `http://127.0.0.1:${receiver.port}/upstash`,
+    UPSTASH_REDIS_REST_TOKEN: "check-sentry-vercel-only",
     DATABASE_URL: process.env.DATABASE_URL || "file:./dev.db",
     SESSION_SECRET: process.env.SESSION_SECRET || "check-sentry-vercel-only",
     ...extraEnv,
@@ -248,6 +303,9 @@ async function bootOnce(label, receiver, extraEnv) {
     }
     if (!up) fail([`${label}: next start не поднялся. Журнал:`, log.slice(-1500)]);
     html = await fetch(`http://127.0.0.1:${port}/es`).then((r) => r.text()).catch(() => "");
+    // Вторая страница с кешем (каталог рассказов) — чтобы «0 запросов к
+    // кешу» не зависел от одной главной.
+    await fetch(`http://127.0.0.1:${port}/es/stories`).then((r) => r.text()).catch(() => "");
     // Отправка события идёт фоном после старта — дать ей время.
     for (let i = 0; i < 20; i++) {
       if (receiver.envelopes.slice(before).some((e) => e.includes("StripeEnvWrongShape"))) break;
@@ -263,7 +321,8 @@ async function bootOnce(label, receiver, extraEnv) {
   // ней же «Прод после выката» судит, что Sentry на проде жив.
   const baggage = (html.match(/<meta name="baggage" content="([^"]*)"/) ?? [])[1] ?? "";
   const traceMeta = /sentry-public_key=/.test(baggage);
-  return { got, stripe: got.filter((e) => e.includes("StripeEnvWrongShape")).length, log, traceMeta, baggage, htmlLen: html.length };
+  const cache = receiver.upstash.slice(upstashBefore);
+  return { got, cache, stripe: got.filter((e) => e.includes("StripeEnvWrongShape")).length, log, traceMeta, baggage, htmlLen: html.length };
 }
 
 /** Позитивный контроль приёмника: SDK с тем же адресом обязан дойти.
@@ -319,12 +378,17 @@ async function live() {
         fail([`Linux + VERCEL=1 + VERCEL_ENV=preview: в baggage /es нет sentry-public_key (длина ${forged.htmlLen}) — признак, по которому прод проверяется после выката, не работает.`]);
       }
       lines.push(`Linux, VERCEL=1, VERCEL_ENV=preview: событие пришло (${forged.stripe} StripeEnvWrongShape, конвертов ${forged.got.length}) — как на Vercel`);
+      if (forged.cache.length < 1) {
+        fail(["Linux + VERCEL=1 + VERCEL_ENV=preview: ни одного запроса к кешу Upstash — на настоящем Vercel кеш бы выключился."]);
+      }
+      lines.push(`Linux, VERCEL=1, VERCEL_ENV=preview: кеш Upstash открыт (${forged.cache.length} запросов, первый — ${forged.cache[0]}) — как на Vercel`);
       const one = await bootOnce("только VERCEL_ENV=preview", receiver, { VERCEL_ENV: "preview" });
       if (one.got.length > 0) {
         fail([`Linux, только VERCEL_ENV=preview (без VERCEL=1): пришло ${one.got.length} конвертов — одной ручной переменной снова достаточно.`]);
       }
       if (one.traceMeta) fail(["Linux, только VERCEL_ENV=preview: в baggage есть sentry-public_key — серверный SDK получил адрес по одной переменной."]);
-      lines.push("Linux, только VERCEL_ENV=preview (контроль): конвертов 0, sentry-public_key в baggage нет — одной переменной мало");
+      if (one.cache.length > 0) fail([`Linux, только VERCEL_ENV=preview: ${one.cache.length} запросов к кешу Upstash — одной переменной снова достаточно.`]);
+      lines.push("Linux, только VERCEL_ENV=preview (контроль): конвертов 0, sentry-public_key в baggage нет, запросов к кешу 0 — одной переменной мало");
     } else {
       if (forged.got.length > 0) {
         fail([`${platform} + VERCEL=1 + VERCEL_ENV=preview: пришло ${forged.got.length} конвертов — Мак снова шлёт в Sentry.`]);
@@ -337,7 +401,10 @@ async function live() {
       }
       if (forged.htmlLen < 1000) fail([`${platform}: страница /es не отрисовалась (длина ${forged.htmlLen}) — запуск не настоящий.`]);
       if (forged.traceMeta) fail([`${platform}: в baggage /es есть sentry-public_key — серверный SDK на Маке включён: ${forged.baggage}`]);
-      lines.push(`${platform}, VERCEL=1, VERCEL_ENV=preview: отчёт Stripe напечатан, конвертов в Sentry 0, sentry-public_key в baggage /es нет — Мак не шлёт`);
+      if (forged.cache.length > 0) {
+        fail([`${platform} + VERCEL=1 + VERCEL_ENV=preview: ${forged.cache.length} запросов к кешу Upstash (${forged.cache[0]}) — Мак снова открывает боевой кеш.`]);
+      }
+      lines.push(`${platform}, VERCEL=1, VERCEL_ENV=preview: отчёт Stripe напечатан, конвертов в Sentry 0, sentry-public_key в baggage /es нет, запросов к кешу Upstash 0 — Мак не шлёт и кеш не открывает`);
     }
   } finally {
     receiver.server.close();
@@ -396,14 +463,21 @@ function selfTest() {
     'import { mayReportServerSentry } from "./src/lib/deploy-environment";\n' +
     "const isDeployed = mayReportServerSentry();\nSentry.init({ dsn: isDeployed ? process.env.SENTRY_DSN : \"\", enabled: isDeployed });";
   const goodRule =
-    "export function mayReportServerSentry(env, platform) {\n" +
-    '  return isDeployedEnvironment(env) && env.VERCEL === "1" && platform === "linux";\n}\n';
+    "export function isRealVercelServer(env, platform) {\n" +
+    '  return isDeployedEnvironment(env) && env.VERCEL === "1" && platform === "linux";\n}\n' +
+    "export function mayReportServerSentry(env, platform) {\n  return isRealVercelServer(env, platform);\n}\n";
+  const goodRedis =
+    'import { isRealVercelServer } from "./deploy-environment";\n' +
+    "function createClient() {\n  if (!isRealVercelServer()) return null;\n  return new Redis({ url, token });\n}";
   const goodInstr =
     "async function reportMisshapenStripeEnv() {\n if (!mayReportServerSentry()) return;\n Sentry.captureException(e);\n}";
   const controls = [
     ["настоящий конфиг", checkSentryConfig("x", readFileSync("./sentry.server.config.ts", "utf8"))],
     ["чистый конфиг", checkSentryConfig("x", goodConfig)],
     ["чистое правило", checkRule(goodRule)],
+    ["настоящее правило", checkRule(readFileSync("./src/lib/deploy-environment.ts", "utf8"))],
+    ["чистый кеш", checkRedis(goodRedis)],
+    ["настоящий кеш", checkRedis(readFileSync("./src/lib/redis.ts", "utf8"))],
     ["чистый отчёт Stripe", checkInstrumentation(goodInstr)],
     ["узловой файл без краевой среды", findEdgeRuntime([{ file: "a.ts", text: 'export const runtime = "nodejs";' }])],
     ["разметка прода с ключом", judgeProdBaggage(PROD_OK)],
@@ -422,6 +496,13 @@ function selfTest() {
     ["правило без проверки ОС", () => checkRule(goodRule.replace(' && platform === "linux"', ""))],
     ["правило без VERCEL=1", () => checkRule(goodRule.replace(' && env.VERCEL === "1"', ""))],
     ["правило с «или»", () => checkRule(goodRule.replace('&& platform === "linux"', '|| platform === "linux"'))],
+    ["Sentry со своей копией правила, а не общей", () =>
+      checkRule(goodRule.replace("return isRealVercelServer(env, platform);", 'return isDeployedEnvironment(env) && env.VERCEL === "1" && platform === "linux";'))],
+    ["кеш на старых воротах (одна VERCEL_ENV, как до 7.302)", () =>
+      checkRedis(goodRedis.replaceAll("isRealVercelServer", "isDeployedEnvironment"))],
+    ["кеш без ворот", () => checkRedis(goodRedis.replace("  if (!isRealVercelServer()) return null;\n", ""))],
+    ["кеш с воротами после new Redis(", () =>
+      checkRedis('import { isRealVercelServer } from "./deploy-environment";\nconst c = new Redis({ url, token });\nif (!isRealVercelServer()) return null;')],
     ["отчёт Stripe на старых воротах", () =>
       checkInstrumentation(goodInstr.replace("mayReportServerSentry()", "isDeployedEnvironment()"))],
     ["отчёт Stripe с воротами после отправки", () =>
@@ -447,7 +528,7 @@ async function main() {
   if (PROD) return prod();
   const problems = SKIP_SOURCE ? [] : checkSource();
   if (problems.length) fail([`Sentry сервера может слать не только с Vercel (${problems.length}):`, ...problems]);
-  if (!SKIP_SOURCE) console.log("check:sentry-vercel-only: исходник — оба серверных конфига и отчёт Stripe открываются только на настоящем Vercel (VERCEL_ENV + VERCEL=1 + Linux), краевой среды нет.");
+  if (!SKIP_SOURCE) console.log("check:sentry-vercel-only: исходник — оба серверных конфига, отчёт Stripe и кеш Upstash открываются только на настоящем Vercel (VERCEL_ENV + VERCEL=1 + Linux), краевой среды нет.");
   if (LIVE) {
     for (const line of await live()) console.log("  ✓ " + line);
     console.log("check:sentry-vercel-only --live: зелёный.");
