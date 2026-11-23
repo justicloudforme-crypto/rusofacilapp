@@ -46,8 +46,11 @@ async function reportMisshapenStripeEnv() {
     const report = formatStripeEnvProblems(problems);
     console.error(report);
 
-    const { isDeployedEnvironment } = await import("./lib/deploy-environment");
-    if (!isDeployedEnvironment()) return;
+    // Тот же замок, что у Sentry сервера (долг 416): не «есть VERCEL_ENV»,
+    // а «настоящий сервер Vercel» — иначе запуск на Маке с ручной
+    // VERCEL_ENV снова назовёт себя развёртыванием.
+    const { mayReportServerSentry } = await import("./lib/deploy-environment");
+    if (!mayReportServerSentry()) return;
 
     const error = new Error(report.split("\n").slice(0, problems.length + 2).join("\n"));
     error.name = "StripeEnvWrongShape";

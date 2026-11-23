@@ -469,3 +469,35 @@ jobs:
             echo "КОНТРОЛЬ country_expect_mx: от раннера вне Мексики ждём Мексику — обязано покраснеть"
           fi
           npm run check:visitor-country:prod -- $EXPECT_ARG
+
+  # ЗАХОД 7.301, ДОЛГ 416. Серверный Sentry открывается только на настоящем
+  # Vercel (VERCEL_ENV + VERCEL=1 + ОС Linux). Это задание доказывает, что
+  # на проде ворота ОТКРЫТЫ: `/es` несёт в `baggage` окружение
+  # `vercel-production` и `sentry-public_key` — ключ бывает в разметке,
+  # только когда SDK включён и получил адрес. Только чтение страницы, в
+  # Sentry не уходит ничего. Красный = Sentry на проде замолчал: письмо
+  # GitHub «Run failed»; issue `prod-down` не заводится (сайт жив).
+  sentry:
+    name: Sentry на проде включён (только чтение)
+    if: >-
+      !inputs.simulate_failure &&
+      (github.event_name == 'workflow_dispatch' ||
+       github.event.schedule == '41 6 * * *' ||
+       (github.event_name == 'deployment_status' &&
+        github.event.deployment_status.state == 'success' &&
+        github.event.deployment.environment == 'Production'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+
+      # Зависимости не нужны: чистый Node (fetch).
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.4"
+
+      - name: Позитивный контроль — разбор разметки без ключа обязан дать красный
+        run: npm run check:sentry-vercel-only:plant
+
+      - name: Живой прод — серверный Sentry включён
+        run: npm run check:sentry-vercel-only:prod
