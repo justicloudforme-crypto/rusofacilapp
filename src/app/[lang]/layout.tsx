@@ -8,6 +8,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "../globals.css";
 import { isLocale, locales } from "@/i18n/config";
 import { getPageDictionary } from "@/i18n/page-dictionary";
+import { bottomNavDict } from "@/i18n/chrome-dict";
 import Navbar from "@/components/Navbar";
 import BottomNav from "@/components/BottomNav";
 import Footer from "@/components/Footer";
@@ -331,7 +332,7 @@ export default async function LangLayout({
           <main className="flex flex-1 flex-col">{children}</main>
           <Footer dict={dict} lang={lang} nativeShell={nativeShell} />
         </PaywallProvider>
-        <BottomNav lang={lang} dict={dict} isLoggedIn={Boolean(user)} nativeShell={nativeShell} />
+        <BottomNav lang={lang} dict={bottomNavDict(dict)} isLoggedIn={Boolean(user)} nativeShell={nativeShell} />
         {/* Reading mode is meant to minimize distractions — the floating
             Telegram CTA is the one persistent, animated, non-content element
             on every page, so it's the one thing this mode hides. Inside the

@@ -8,7 +8,7 @@ import { usePinnedLayer, useKeyboardOpen } from "@/lib/usePinnedLayer";
 import { useKeyboardExpected } from "@/lib/useKeyboardExpected";
 import { BookIcon, GraduationCapIcon, DictionaryIcon, PuzzleIcon, PersonalIcon } from "@/components/profile/ProfileIcons";
 import type { Locale } from "@/i18n/config";
-import type { Dictionary } from "@/i18n/dictionaries";
+import type { BottomNavDict } from "@/i18n/chrome-dict";
 
 /**
  * Persistent 5-item bottom bar. In the BROWSER it is for a LOGGED-IN
@@ -50,7 +50,8 @@ export default function BottomNav({
   nativeShell,
 }: {
   lang: Locale;
-  dict: Dictionary;
+  /** Только `nav` (долг 183) — см. `src/i18n/chrome-dict.ts`. */
+  dict: BottomNavDict;
   isLoggedIn: boolean;
   /**
    * ВНУТРИ ПРИЛОЖЕНИЯ ПАНЕЛЬ ПОСТОЯННАЯ — решение владельца 13.09.2026

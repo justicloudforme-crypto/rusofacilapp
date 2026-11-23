@@ -9,7 +9,7 @@ import Modal from "@/components/ui/Modal";
 import Input from "@/components/ui/Input";
 import AccessMark from "@/components/ui/AccessMark";
 import type { Locale } from "@/i18n/config";
-import type { Dictionary } from "@/i18n/dictionaries";
+import type { SearchDict } from "@/i18n/chrome-dict";
 import { SearchDemandSession } from "@/lib/search/demand-session";
 import { logSearchDemand } from "@/lib/search/log-client";
 import { MAX_QUERY_LENGTH, SEARCH_DEBOUNCE_MS } from "@/lib/search/query";
@@ -55,7 +55,8 @@ export default function GlobalSearch({
   isLoggedIn,
 }: {
   lang: Locale;
-  dict: Dictionary;
+  /** Только `nav`, `search`, `access` (долг 183) — см. `src/i18n/chrome-dict.ts`. */
+  dict: SearchDict;
   isLoggedIn: boolean;
 }) {
   const [open, setOpen] = useState(false);
