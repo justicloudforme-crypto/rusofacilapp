@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getDeployEnvironment, isDeployedEnvironment } from "./deploy-environment";
+import { currentPlatform, getDeployEnvironment, isDeployedEnvironment, mayReportServerSentry } from "./deploy-environment";
 
 describe("deploy environment gate", () => {
   it("reports no deployment on a developer machine", () => {
@@ -43,5 +43,41 @@ describe("deploy environment gate", () => {
     // "simplifying" the check back to NODE_ENV, which is production for
     // `next build`, `next start` and the e2e suite alike.
     expect(isDeployedEnvironment({ NODE_ENV: "production" } as unknown as NodeJS.ProcessEnv)).toBe(false);
+  });
+});
+
+describe("server Sentry gate (debt 416)", () => {
+  const vercel = (env: string) => ({ VERCEL: "1", VERCEL_ENV: env }) as unknown as NodeJS.ProcessEnv;
+
+  it("keeps sending from real Vercel servers — production and preview", () => {
+    // Vercel runs functions on Linux and sets VERCEL=1 next to VERCEL_ENV.
+    for (const env of ["production", "preview", "development"]) {
+      expect(mayReportServerSentry(vercel(env), "linux")).toBe(true);
+    }
+  });
+
+  it("never sends from a Mac, whatever variables are set by hand", () => {
+    // The 7.286 incident: VERCEL_ENV=preview on the command line of a Mac.
+    expect(mayReportServerSentry({ VERCEL_ENV: "preview" } as unknown as NodeJS.ProcessEnv, "darwin")).toBe(false);
+    // Even with BOTH Vercel variables forged, darwin stays darwin.
+    expect(mayReportServerSentry(vercel("production"), "darwin")).toBe(false);
+    expect(mayReportServerSentry(vercel("preview"), "win32")).toBe(false);
+  });
+
+  it("needs VERCEL=1 too: one forged variable is not enough even on Linux", () => {
+    expect(mayReportServerSentry({ VERCEL_ENV: "preview" } as unknown as NodeJS.ProcessEnv, "linux")).toBe(false);
+    expect(mayReportServerSentry({ VERCEL: "1" } as unknown as NodeJS.ProcessEnv, "linux")).toBe(false);
+    expect(mayReportServerSentry({ VERCEL: "true", VERCEL_ENV: "preview" } as unknown as NodeJS.ProcessEnv, "linux")).toBe(false);
+  });
+
+  it("is closed where the platform is unknown (Edge runtime)", () => {
+    // null, не undefined: undefined включил бы значение по умолчанию — ОС
+    // этого процесса (так тест краснел на Linux-раннере CI, 7.301).
+    expect(mayReportServerSentry(vercel("production"), null)).toBe(false);
+  });
+
+  it("reads the real platform of this process by default", () => {
+    expect(currentPlatform()).toBe(process.platform);
+    expect(mayReportServerSentry(vercel("production"))).toBe(process.platform === "linux");
   });
 });
