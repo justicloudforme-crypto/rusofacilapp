@@ -64,7 +64,13 @@ on:
         #   country_expect_mx — (7.296, долг 42) задание «Страна
         #                     посетителя» ждёт от раннера Мексику — обязано
         #                     покраснеть: раннер вне Мексики, и сайт это видит.
-        description: "Контроль: none / broken_target (прод упал) / install_failure (проверка не состоялась) / webkit_broken_target (красный только у WebKit) / country_expect_mx (красный только у «Страны посетителя»)"
+        #   deploy_failed   — (7.303, долг 420) задание «Выкат на прод
+        #                     собрался» получает подложенный статус выката
+        #                     `failure`: обязано покраснеть и завести issue
+        #                     `deploy-failed` с пометкой «КОНТРОЛЬ»; закроет
+        #                     его следующий прогон по расписанию при зелёном
+        #                     выкате. Остальные задания идут как обычно.
+        description: "Контроль: none / broken_target (прод упал) / install_failure (проверка не состоялась) / webkit_broken_target (красный только у WebKit) / country_expect_mx (красный только у «Страны посетителя») / deploy_failed (красный и issue только у «Выкат собрался»)"
         type: choice
         default: none
         options:
@@ -73,6 +79,7 @@ on:
           - install_failure
           - webkit_broken_target
           - country_expect_mx
+          - deploy_failed
   schedule:
     # 17-я минута каждого часа: не в ноль, чтобы не толкаться с общей
     # очередью расписаний GitHub.
@@ -501,3 +508,46 @@ jobs:
 
       - name: Живой прод — серверный Sentry включён
         run: npm run check:sentry-vercel-only:prod
+
+  # ЗАХОД 7.303, ДОЛГ 420. УПАВШИЙ ВЫКАТ БОЛЬШЕ НЕ МОЛЧИТ.
+  #
+  # Задания выше идут только на `deployment_status == success`. 23.11.2026
+  # шесть выкатов подряд (мержи #564–#569) упали на сборке Vercel, все
+  # задания были `skipped`, прогон серый, письма не было, а живой сайт
+  # стоял на #562. Это задание смотрит на САМ выкат: свежий GitHub
+  # Deployment окружения Production и его последний статус
+  # (`scripts/deploy-alarm.mjs`). `failure`/`error` → красный прогон
+  # (письмо GitHub «Run failed») и issue `deploy-failed` на владельца;
+  # `success` → issue закрывается. Раз в час — на случай, если событие
+  # выката не пришло; повтор того же отказа по расписанию issue не
+  # дублирует и не краснеет каждый час — issue и есть тревога.
+  deploy:
+    name: Выкат на прод собрался (статус Vercel)
+    if: >-
+      !inputs.simulate_failure &&
+      github.event.schedule != '41 6 * * *' &&
+      (github.event_name != 'deployment_status' ||
+       (github.event.deployment.environment == 'Production' &&
+        contains(fromJSON('["success","failure","error"]'), github.event.deployment_status.state)))
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      issues: write
+      deployments: read
+    steps:
+      - uses: actions/checkout@v5
+
+      # Зависимости не нужны: чистый Node (fetch).
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.4"
+
+      - name: Позитивный контроль — подменённый GitHub, упавший выкат обязан дать красный и issue
+        run: npm run alarm:deploy:plant
+
+      - name: Свежий выкат Production — собрался ли
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          DEPLOY_ALARM_CONTROL: ${{ inputs.control }}
+        run: npm run alarm:deploy
