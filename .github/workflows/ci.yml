@@ -1828,6 +1828,19 @@ jobs:
         timeout-minutes: 30
         run: npm run check:rendered:ci
 
+      # 7.302, долг 419: если «Rendered surface» нашёл границу ошибок («Что-то
+      # пошло не так»), рядом лежат снимок экрана и журнал браузера
+      # (`scripts/check-rendered-surface.mjs`, `test-results/rendered-surface/`).
+      # Выгружаются и у красного, и у зелёного прогона, если файлы есть;
+      # без находки папка пуста и артефакта нет.
+      - name: Upload rendered-surface evidence
+        if: always() && hashFiles('test-results/rendered-surface/**') != ''
+        uses: actions/upload-artifact@v6
+        with:
+          name: rendered-surface-evidence
+          path: test-results/rendered-surface/
+          retention-days: 30
+
       # 7.277 (долги 388/389): отчёт выгружается и у ЗЕЛЁНОГО прогона, если
       # в нём упала хоть одна попытка. Признак — файлы в
       # `playwright-report/data/`: тесты сами вложений не кладут, а трасса
