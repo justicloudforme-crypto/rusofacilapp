@@ -7,7 +7,7 @@
  * development never needs a Redis account.
  */
 import { Redis } from "@upstash/redis";
-import { isDeployedEnvironment } from "./deploy-environment";
+import { isRealVercelServer } from "./deploy-environment";
 
 const globalForRedis = globalThis as unknown as { redis: Redis | null | undefined };
 
@@ -20,7 +20,12 @@ function createClient(): Redis | null {
   // shared cache is visible to real users for the length of its TTL.
   // Off-deployment this returns null and every call site falls back to its
   // in-process Map, which is the correct local behaviour anyway.
-  if (!isDeployedEnvironment()) return null;
+  //
+  // 7.302: the gate is the shared "real Vercel server" rule (VERCEL_ENV +
+  // VERCEL=1 + Linux process), not VERCEL_ENV alone — a VERCEL_ENV typed by
+  // hand on the Mac (7.286) used to open the live cache. Same rule as the
+  // server Sentry (debt 416); guarded by check:sentry-vercel-only.
+  if (!isRealVercelServer()) return null;
   const url = process.env.UPSTASH_REDIS_REST_URL;
   const token = process.env.UPSTASH_REDIS_REST_TOKEN;
   if (!url || !token) return null;
