@@ -1,9 +1,12 @@
 import * as Sentry from "@sentry/nextjs";
-import { isDeployedEnvironment } from "./src/lib/deploy-environment";
+import { mayReportServerSentry } from "./src/lib/deploy-environment";
 import { tagShellOnEvent, userAgentFromSentryEvent } from "./src/lib/shell-tag";
 
-// Same deployment gate as sentry.server.config.ts.
-const isDeployed = isDeployedEnvironment();
+// Same gate as sentry.server.config.ts (debt 416). Vercel's Edge runtime
+// exposes no process.platform, so this stays closed there — the project
+// has no Edge code (Next 16 proxy runs on Node), and
+// check:sentry-vercel-only goes red if Edge code ever appears.
+const isDeployed = mayReportServerSentry();
 // NOTE: `environment` is deliberately NOT set here. On Vercel the SDK
 // derives it itself as "vercel-production" / "vercel-preview" — verified
 // against the live site, whose HTML carries
@@ -18,7 +21,9 @@ const isDeployed = isDeployedEnvironment();
 // into `runtime: "edge"`). Kept separate from sentry.server.config.ts
 // because the Edge runtime doesn't support the full Node.js SDK.
 Sentry.init({
-  dsn: isDeployed ? process.env.SENTRY_DSN : undefined,
+  // "" not undefined — see sentry.server.config.ts (the SDK fills an
+  // undefined dsn from process.env.SENTRY_DSN).
+  dsn: isDeployed ? process.env.SENTRY_DSN : "",
   enabled: isDeployed,
   tracesSampleRate: 0.1,
   debug: false,

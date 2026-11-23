@@ -1,13 +1,14 @@
 import * as Sentry from "@sentry/nextjs";
-import { isDeployedEnvironment } from "./src/lib/deploy-environment";
+import { mayReportServerSentry } from "./src/lib/deploy-environment";
 import { scrubTokensFromEvent } from "./src/lib/scrub-token";
 import { tagShellOnEvent, userAgentFromSentryEvent } from "./src/lib/shell-tag";
 
-// null on a laptop and in CI, "production"/"preview"/"development" on
-// Vercel. Gating on this (not NODE_ENV) is what stops a local
-// `next start` from filing events into the live project — see the long
-// comment in src/lib/deploy-environment.ts for the incident.
-const isDeployed = isDeployedEnvironment();
+// True only on a real Vercel server: VERCEL_ENV + VERCEL=1 + Linux (the
+// OS of this very process, not a variable). Gating on this (not NODE_ENV,
+// and not VERCEL_ENV alone) is what stops a local `next start` — even one
+// started with VERCEL_ENV=preview typed by hand (debt 416, 7.286) — from
+// filing events into the live project. See src/lib/deploy-environment.ts.
+const isDeployed = mayReportServerSentry();
 // NOTE: `environment` is deliberately NOT set here. On Vercel the SDK
 // derives it itself as "vercel-production" / "vercel-preview" — verified
 // against the live site, whose HTML carries
@@ -23,7 +24,14 @@ const isDeployed = isDeployedEnvironment();
 // server code never ships to the client bundle, so no need to expose it.
 Sentry.init({
   // DSN withheld entirely off-Vercel, belt and braces with `enabled`.
-  dsn: isDeployed ? process.env.SENTRY_DSN : undefined,
+  // An EMPTY STRING, not `undefined` (7.301, debt 416): the Node SDK fills
+  // an undefined dsn from process.env.SENTRY_DSN itself
+  // (@sentry/node-core sdk/index.js: `options.dsn ?? process.env.SENTRY_DSN`),
+  // so `undefined` withheld nothing and only `enabled` stood. With "" the
+  // address never reaches the SDK — and the page's baggage carries no
+  // `sentry-public_key`, which is how check:sentry-vercel-only and the
+  // post-deploy check tell "Sentry is on" from the outside.
+  dsn: isDeployed ? process.env.SENTRY_DSN : "",
   enabled: isDeployed,
   tracesSampleRate: 0.1,
   debug: false,
