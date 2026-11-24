@@ -4,6 +4,8 @@ import { notFound } from "next/navigation";
 import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
+import { readForPage } from "@/lib/page-read";
+import PuzzleUnavailable from "@/components/word-games/PuzzleUnavailable";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 import WhyLearnRussianBlurb from "@/components/word-games/WhyLearnRussianBlurb";
 import GameLandingLinks from "@/components/word-games/GameLandingLinks";
@@ -57,9 +59,12 @@ export default async function SopaDeLetrasRusoPage({
     // (see PROGRESS.md's 2026-08-28 entry on avoiding that overlap).
     // The coordinate is a shared constant because the six themed landings
     // must avoid embedding this same grid — see getLandingPuzzleForTopic.
-    getPuzzle(GENERIC_SOPA_PUZZLE.type, GENERIC_SOPA_PUZZLE.level, GENERIC_SOPA_PUZZLE.sequence),
+    // 7.305: отказ базы — текст и ссылки без пазла; строки нет — 404, как было.
+    readForPage("sopa de letras genérica", () =>
+      getPuzzle(GENERIC_SOPA_PUZZLE.type, GENERIC_SOPA_PUZZLE.level, GENERIC_SOPA_PUZZLE.sequence),
+    ),
   ]);
-  if (!row) notFound();
+  if (row.ok && !row.value) notFound();
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -98,13 +103,17 @@ export default async function SopaDeLetrasRusoPage({
       <WhyLearnRussianBlurb />
 
       <div className="mt-10">
-        <WordGamePlayer
-          lang="es"
-          puzzle={toPublicPuzzle(row)}
-          dict={wordGamePlayerDict(dict)}
-          resultDict={{ ...dict.gameResult, locale: lang }}
-          signedIn={Boolean(user)}
-        />
+        {row.ok && row.value ? (
+          <WordGamePlayer
+            lang="es"
+            puzzle={toPublicPuzzle(row.value)}
+            dict={wordGamePlayerDict(dict)}
+            resultDict={{ ...dict.gameResult, locale: lang }}
+            signedIn={Boolean(user)}
+          />
+        ) : (
+          <PuzzleUnavailable href={`/es${PAGE_PATH}`} />
+        )}
       </div>
 
       {/* The hub block. Server-rendered <a> elements, so the six themed
