@@ -594,7 +594,16 @@ async function main() {
       [TSX, "scripts/check-ru-locale-spanish.ts", `--base=${BASE}`, ...passthrough],
       { stdio: "inherit" }
     );
+    // ДОЛГ 295, заход 7.304: при лежащей базе ни одна публичная страница не
+    // остаётся без сайта (500 без границы, global-error, пустой ответ), а
+    // уроки, медиа, словарь, главная и лендинги — ЖИВЫЕ. Сервер у прибора
+    // свой (порт 3127, `DATABASE_URL` в несуществующий каталог): этот, на
+    // 3123, смотрит на здоровую базу, и подменять её под ним нельзя.
+    const dbOutage = spawnSync(process.execPath, ["scripts/check-db-outage.mjs"], { stdio: "inherit" });
+    const dbOutagePlant = spawnSync(process.execPath, ["scripts/check-db-outage.mjs", "--plant"], { stdio: "inherit" });
     return (
+      (dbOutage.status ?? 1) ||
+      (dbOutagePlant.status ?? 1) ||
       (shellDownloads.status ?? 1) ||
       (shellDownloadsPlant.status ?? 1) ||
       (lockPurchase.status ?? 1) ||

@@ -165,6 +165,71 @@ test("долг 278: один упавший запрос при живой се�
   ).toBeHidden();
 });
 
+/**
+ * ДОЛГ 278, ЗАХОД 7.304 — ПРИЧИНА НАЗВАНА.
+ *
+ * Жалоба 20.09.2026 (рассказ на несколько секунд подменился «Estás sin
+ * conexión» при живом интернете) пришла в день аварии квоты Turso: в Sentry
+ * в тот же день 126 событий `BLOCKED` ровно на `/[lang]/stories/[id]`
+ * (долг 290). Проба «жива ли сеть», поставленная в 7.227, спрашивает
+ * `/api/health`, а он проверяет БАЗУ: при лежащей базе отвечает 503
+ * `RF-DOWN`, при медленной — не успевает за 2,5 с. Воркер читал это как
+ * «сервера нет» и отдавал каркас, каркас дважды спрашивал то же самое и
+ * печатал «нет соединения». Сеть при этом жива: сервер ответил.
+ *
+ * Здесь подсажено ровно это: `/api/health` отвечает 503 `RF-DOWN`, первый
+ * запрос документа оборван. На коде до 7.304 — каркас «Нет соединения».
+ */
+test("долг 278: база лежит (/api/health 503) и один запрос оборван — «нет соединения» не показывается", async ({
+  page,
+  context,
+}) => {
+  test.setTimeout(90_000);
+
+  await page.goto("/ru");
+  await page.waitForFunction(() => navigator.serviceWorker.controller !== null, null, { timeout: 30_000 });
+
+  // Документ воркер берёт «предзагрузкой навигации», а её запрос Playwright
+  // не перехватывает. Без предзагрузки воркер идёт за документом сам — тот
+  // же путь `NetworkFirst` → `handlerDidError`, только видимый пробе.
+  await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.navigationPreload?.disable();
+  });
+
+  let healthAsked = 0;
+  await context.route("**/api/health**", async (route) => {
+    healthAsked += 1;
+    await route.fulfill({
+      status: 503,
+      contentType: "application/json",
+      body: JSON.stringify({ status: "RF-DOWN", ok: false, db: "down", reason: "db_unreachable" }),
+    });
+  });
+  let documentAborted = 0;
+  await context.route("**/ru/glossary", async (route) => {
+    if (documentAborted === 0) {
+      documentAborted += 1;
+      await route.abort("failed");
+      return;
+    }
+    await route.continue();
+  });
+
+  await visit(page, "/ru/glossary");
+  await page.waitForTimeout(6000);
+
+  expect(documentAborted, "запрос документа не был оборван — мерить нечего").toBe(1);
+  expect(healthAsked, "воркер не спросил /api/health — подсадка не дошла").toBeGreaterThan(0);
+  const offlineShown = await page
+    .locator('h1[data-state="offline"]')
+    .isVisible()
+    .catch(() => false);
+  expect(offlineShown, "при живой сети и лежащей базе показано «нет соединения» — долг 278").toBe(false);
+  const state = await surface(page);
+  expect(state.shell, "страница подменена каркасом, хотя сервер ответил").toBe(false);
+});
+
 test("после выхода из аккаунта офлайн не показывается ни кабинет, ни страницы прежнего человека", async ({
   page,
   context,

@@ -6,7 +6,7 @@ import { isLevelSlug } from "@/lib/courses";
 import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTierFor, hasAnyAccess } from "@/lib/entitlement";
 import { isNativeShellRequest } from "@/lib/native-shell";
-import { getExamContent } from "@/lib/exams/content";
+import { getExamContentForPage } from "@/lib/exams/content";
 import { localizeExamText, localizeSkillAreaTitle } from "@/lib/exams/localize";
 import ExamView from "@/components/lesson/ExamView";
 import { routeAlternates } from "@/lib/site";
@@ -24,7 +24,7 @@ export default async function ExamPage({
   const { lang, level, examSlug } = await params;
   if (!isLocale(lang) || !isLevelSlug(level)) notFound();
 
-  const exam = await getExamContent(level, examSlug);
+  const exam = await getExamContentForPage(level, examSlug);
   if (!exam) notFound();
 
   const user = await getCurrentUser();

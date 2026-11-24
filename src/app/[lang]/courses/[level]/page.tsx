@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { isLocale, locales } from "@/i18n/config";
 import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isLevelSlug, levelMeta, levelSlugs } from "@/lib/courses";
-import { getExamContent } from "@/lib/exams/content";
+import { getExamContentForPage } from "@/lib/exams/content";
 import { localizeExamText } from "@/lib/exams/localize";
 import { getCurrentUser } from "@/lib/auth";
 import { getEntitlementTierFor } from "@/lib/entitlement";
@@ -80,7 +80,7 @@ export default async function LevelPage({
       const lessonNumber = index + 1;
       if (lessonNumber % 10 !== 0) return null;
       const examSlug = `${level}-exam-${lessonNumber / 10}`;
-      const exam = await getExamContent(level, examSlug);
+      const exam = await getExamContentForPage(level, examSlug);
       return exam ? { examSlug, exam } : null;
     })
   );
