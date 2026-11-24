@@ -1,5 +1,6 @@
 import type { APIRequestContext, Page, Request } from "@playwright/test";
 import { test, expect } from "./helpers/test";
+import { waitPageInteractive } from "./helpers/page-interactive";
 
 /**
  * Журнал спроса на поиск: **одна строка на заход, каким бы выходом заход
@@ -143,6 +144,10 @@ async function openControlledPage(page: Page) {
 
 async function openSearchAndType(page: Page, query: string) {
   await openControlledPage(page);
+  // 7.306, долг 424: нажатие — только по ожившей странице; не ожила —
+  // провал с перечнем того, что висит, а не «перехватывает нажатие».
+  // Срок — 15 с из прежних 30, которые ждало само нажатие.
+  await waitPageInteractive(page, 15_000);
   await page.getByRole("button", { name: "Buscar" }).click();
   await expect(page.locator(RESULTS)).toBeVisible();
   await page.getByRole("searchbox").fill(query);
