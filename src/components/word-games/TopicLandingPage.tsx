@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getLandingPuzzleForTopic, getThemedPuzzlesByTopic, toPublicPuzzle } from "@/lib/word-games/data";
+import { readForPage } from "@/lib/page-read";
+import PuzzleUnavailable from "@/components/word-games/PuzzleUnavailable";
 import { getVocabularyCategoryPage } from "@/lib/vocabulary-categories";
 import { TOPIC_LANDINGS, landingPath, type TopicLanding } from "@/lib/word-games/topic-landings";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
@@ -21,17 +23,20 @@ import { wordGamePlayerDict } from "@/lib/word-games/player-dict";
  * data no longer has.
  */
 export default async function TopicLandingPage({ landing }: { landing: TopicLanding }) {
-  const [dict, user, puzzle, themed] = await Promise.all([
+  const [dict, user, read, themed] = await Promise.all([
     getPageDictionary("es"),
     getCurrentUser(),
-    getLandingPuzzleForTopic(landing.topic),
+    // 7.305: отказ базы — текст и ссылки без пазла (`src/lib/page-read.ts`).
+    readForPage(`landing puzzle ${landing.topic}`, () => getLandingPuzzleForTopic(landing.topic)),
     getThemedPuzzlesByTopic(),
   ]);
 
   // No themed puzzle for this topic any more means the page's own premise
   // is gone. A 404 is the honest answer; embedding an unrelated grid under
-  // a themed title is not.
-  if (!puzzle) notFound();
+  // a themed title is not. A database that did not answer is a different
+  // thing: the prose and links are in code, so they are still served.
+  if (read.ok && !read.value) notFound();
+  const puzzle = read.ok ? read.value : null;
 
   const vocabularyPage = getVocabularyCategoryPage(landing.topic);
   const path = landingPath(landing);
@@ -39,7 +44,7 @@ export default async function TopicLandingPage({ landing }: { landing: TopicLand
 
   // The theme's other puzzles, minus the one already on this page.
   const others = (themed.get(landing.topic) ?? []).filter(
-    (p) => !(p.type === puzzle.type && p.level === puzzle.level && p.sequence === puzzle.sequence),
+    (p) => !puzzle || !(p.type === puzzle.type && p.level === puzzle.level && p.sequence === puzzle.sequence),
   );
 
   return (
@@ -84,13 +89,17 @@ export default async function TopicLandingPage({ landing }: { landing: TopicLand
       ))}
 
       <div className="mt-10">
-        <WordGamePlayer
-          lang="es"
-          puzzle={toPublicPuzzle(puzzle)}
-          dict={wordGamePlayerDict(dict)}
-          resultDict={{ ...dict.gameResult, locale: "es" }}
-          signedIn={Boolean(user)}
-        />
+        {puzzle ? (
+          <WordGamePlayer
+            lang="es"
+            puzzle={toPublicPuzzle(puzzle)}
+            dict={wordGamePlayerDict(dict)}
+            resultDict={{ ...dict.gameResult, locale: "es" }}
+            signedIn={Boolean(user)}
+          />
+        ) : (
+          <PuzzleUnavailable href={`/es${path}`} />
+        )}
       </div>
 
       <section className="mt-10 flex flex-col gap-2 border-t border-black/10 pt-6 dark:border-white/30">
