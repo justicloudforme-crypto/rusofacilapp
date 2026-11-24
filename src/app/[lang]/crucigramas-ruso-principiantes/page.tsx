@@ -3,6 +3,8 @@ import { notFound } from "next/navigation";
 import { getPageDictionary } from "@/i18n/page-dictionary";
 import { getCurrentUser } from "@/lib/auth";
 import { getPuzzle, toPublicPuzzle } from "@/lib/word-games/data";
+import { readForPage } from "@/lib/page-read";
+import PuzzleUnavailable from "@/components/word-games/PuzzleUnavailable";
 import WordGamePlayer from "@/components/word-games/WordGamePlayer";
 import WhyLearnRussianBlurb from "@/components/word-games/WhyLearnRussianBlurb";
 import GameLandingLinks from "@/components/word-games/GameLandingLinks";
@@ -38,9 +40,10 @@ export default async function CrucigramasRusoPrincipiantesPage({
   const [dict, user, row] = await Promise.all([
     getPageDictionary("es"),
     getCurrentUser(),
-    getPuzzle("CROSSWORD", "A1", 6),
+    // 7.305: отказ базы — текст и ссылки без пазла; строки нет — 404, как было.
+    readForPage("crucigrama CROSSWORD/A1/6", () => getPuzzle("CROSSWORD", "A1", 6)),
   ]);
-  if (!row) notFound();
+  if (row.ok && !row.value) notFound();
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -80,13 +83,17 @@ export default async function CrucigramasRusoPrincipiantesPage({
       <WhyLearnRussianBlurb />
 
       <div className="mt-10">
-        <WordGamePlayer
-          lang="es"
-          puzzle={toPublicPuzzle(row)}
-          dict={wordGamePlayerDict(dict)}
-          resultDict={{ ...dict.gameResult, locale: lang }}
-          signedIn={Boolean(user)}
-        />
+        {row.ok && row.value ? (
+          <WordGamePlayer
+            lang="es"
+            puzzle={toPublicPuzzle(row.value)}
+            dict={wordGamePlayerDict(dict)}
+            resultDict={{ ...dict.gameResult, locale: lang }}
+            signedIn={Boolean(user)}
+          />
+        ) : (
+          <PuzzleUnavailable href={`/es${PAGE_PATH}`} />
+        )}
       </div>
 
       <GameLandingLinks current="crucigrama" />

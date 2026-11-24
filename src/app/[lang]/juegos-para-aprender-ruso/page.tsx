@@ -8,6 +8,8 @@ import FreePuzzleIndex from "@/components/word-games/FreePuzzleIndex";
 import JsonLd from "@/components/seo/JsonLd";
 import { SITE_URL, breadcrumbList } from "@/lib/site";
 import { getFreeSequences } from "@/lib/word-games/data";
+import { readForPage } from "@/lib/page-read";
+import PuzzleUnavailable from "@/components/word-games/PuzzleUnavailable";
 import { WORD_GAME_FREE_RUNGS_PER_LEVEL } from "@/lib/word-games/free-tier";
 import { TOPIC_LANDINGS, landingPath } from "@/lib/word-games/topic-landings";
 
@@ -58,12 +60,14 @@ export async function generateMetadata({
   // split in two and their tails opened as well (free-tier.ts,
   // EXTRA_FREE_WORD_GAME_RUNGS): production has served 83 since 05.09.2026
   // while three surfaces still promised 80.
-  const freeTotal = countFree(await getFreeSequences());
+  // 7.305: отказ базы — то же описание без числа, а не экран ошибки.
+  const free = await readForPage("free word-game sequences (metadata)", getFreeSequences);
+  const freeCount = free.ok ? `${countFree(free.value)} ` : "";
   return {
     title: "Juegos para aprender ruso, gratis y sin registro | RusoFácilapp",
     description:
       `Sopas de letras y crucigramas en ruso para jugar en el navegador, gratis y sin cuenta: ` +
-      `${freeTotal} puzles gratuitos de A1 a B2, y con Premium hasta el C1.`,
+      `${freeCount}puzles gratuitos de A1 a B2, y con Premium hasta el C1.`,
     alternates: {
       canonical: url,
       languages: { es: url, "x-default": url },
@@ -98,9 +102,15 @@ export default async function JuegosParaAprenderRusoPage({
   const { lang } = await params;
   if (lang !== "es") notFound();
 
-  const [dict, freeByPair] = await Promise.all([getPageDictionary("es"), getFreeSequences()]);
-  const freeTotal = countFree(freeByPair);
-  const freeTails = countFreeTails(freeByPair);
+  // 7.305: отказ базы — весь текст и ссылки из кода, без перечня пазлов
+  // и без числа (`src/lib/page-read.ts`).
+  const [dict, free] = await Promise.all([
+    getPageDictionary("es"),
+    readForPage("free word-game sequences", getFreeSequences),
+  ]);
+  const freeByPair = free.ok ? free.value : null;
+  const freeTotal = freeByPair ? countFree(freeByPair) : 0;
+  const freeTails = freeByPair ? countFreeTails(freeByPair) : 0;
 
   return (
     <div className="mx-auto w-full max-w-3xl flex-1 px-6 py-16">
@@ -124,7 +134,7 @@ export default async function JuegosParaAprenderRusoPage({
 
       <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Juegos para aprender ruso</h1>
       <p className="mt-3 text-lg leading-8 text-foreground/70">
-        Dos tipos de juego, {freeTotal} puzles gratuitos y ningún registro: se abren en el
+        Dos tipos de juego, {freeByPair ? `${freeTotal} ` : ""}puzles gratuitos y ningún registro: se abren en el
         navegador y se juegan en el momento. Todos usan vocabulario ruso real, agrupado por nivel
         y, en la mayoría de los casos, por tema. El curso del sitio va de A1 a B2; el vocabulario,
         los cuentos y los juegos llegan hasta el C1 — los puzles gratuitos son los de A1 a B2, y
@@ -206,29 +216,35 @@ export default async function JuegosParaAprenderRusoPage({
           makes the hub a real entry point rather than a menu of three:
           every free puzzle a visitor can play is one click from here,
           crosswords included. */}
-      <FreePuzzleIndex
-        lang="es"
-        dict={{
-          freeSampleTitle: `Los ${freeTotal} puzles gratuitos, uno por uno`,
-          // «de cada nivel» era falso: los niveles del sitio son cinco y
-          // el C1 no tiene ni un solo puzle gratuito
-          // (isFreeWordGamePuzzle: level !== "C1" && sequence <= 10).
-          // Tampoco son exactamente diez por escalera: el 05.09.2026 tres
-          // tableros gratuitos se partieron en dos y sus colas se abrieron
-          // también (EXTRA_FREE_WORD_GAME_RUNGS), así que el total se
-          // cuenta en vez de escribirse.
-          freeSampleIntro:
-            `Los diez primeros de cada uno de los cuatro niveles de A1 a B2, en sopa de letras y en crucigrama` +
-            (freeTails > 0
-              ? `, más ${freeTails === 1 ? "la cola de un tablero que hubo" : `las colas de ${freeTails} tableros que hubo`} que partir en dos`
-              : "") +
-            `: ${freeTotal} en total, sin cuenta y sin suscripción. En C1 no hay ninguno gratuito. Aquí están todos, por tipo y por nivel.`,
-          typeWordSearch: dict.wordGames.typeWordSearch,
-          typeCrossword: dict.wordGames.typeCrossword,
-          puzzleLabel: dict.wordGames.puzzleLabel,
-        }}
-        available={(type, level) => freeByPair.get(`${type}:${level}`)}
-      />
+      {freeByPair ? (
+        <FreePuzzleIndex
+          lang="es"
+          dict={{
+            freeSampleTitle: `Los ${freeTotal} puzles gratuitos, uno por uno`,
+            // «de cada nivel» era falso: los niveles del sitio son cinco y
+            // el C1 no tiene ni un solo puzle gratuito
+            // (isFreeWordGamePuzzle: level !== "C1" && sequence <= 10).
+            // Tampoco son exactamente diez por escalera: el 05.09.2026 tres
+            // tableros gratuitos se partieron en dos y sus colas se abrieron
+            // también (EXTRA_FREE_WORD_GAME_RUNGS), así que el total se
+            // cuenta en vez de escribirse.
+            freeSampleIntro:
+              `Los diez primeros de cada uno de los cuatro niveles de A1 a B2, en sopa de letras y en crucigrama` +
+              (freeTails > 0
+                ? `, más ${freeTails === 1 ? "la cola de un tablero que hubo" : `las colas de ${freeTails} tableros que hubo`} que partir en dos`
+                : "") +
+              `: ${freeTotal} en total, sin cuenta y sin suscripción. En C1 no hay ninguno gratuito. Aquí están todos, por tipo y por nivel.`,
+            typeWordSearch: dict.wordGames.typeWordSearch,
+            typeCrossword: dict.wordGames.typeCrossword,
+            puzzleLabel: dict.wordGames.puzzleLabel,
+          }}
+          available={(type, level) => freeByPair.get(`${type}:${level}`)}
+        />
+      ) : (
+        <div className="mt-12">
+          <PuzzleUnavailable href={`/es${PAGE_PATH}`} plural />
+        </div>
+      )}
 
       <WhyLearnRussianBlurb plural />
 

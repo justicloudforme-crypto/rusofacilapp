@@ -173,9 +173,9 @@ const ALLOWED: { match: RegExp; reason: string }[] = [
       "the 23 category pages are /es-only (23 in the sitemap for /es, 0 for /ru), and the index block that names them is rendered only when lang === 'es' (showCategoryIndex).",
   },
   {
-    match: /^src\/components\/word-games\/(TopicLandingPage|GameLandingLinks|WhyLearnRussianBlurb|SpanishGamesHubLink)\.tsx$/,
+    match: /^src\/components\/word-games\/(TopicLandingPage|GameLandingLinks|WhyLearnRussianBlurb|SpanishGamesHubLink|PuzzleUnavailable)\.tsx$/,
     reason:
-      "rendered only by the Spanish-only puzzle landings above, or (SpanishGamesHubLink) only when lang === 'es' on the bilingual catalogue; same reasoning, one level down.",
+      "rendered only by the Spanish-only puzzle landings above (PuzzleUnavailable — in place of their puzzle when the database is down, 7.305), or (SpanishGamesHubLink) only when lang === 'es' on the bilingual catalogue; same reasoning, one level down.",
   },
   {
     match: /(^|\/)(error|global-error)\.tsx$/,

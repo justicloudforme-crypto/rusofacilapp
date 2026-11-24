@@ -29,6 +29,13 @@
  * её содержимое лежит в коде (уроки, медиа, словарь, лендинги), база ей
  * только помогает. Остальным разрешена граница или 404, но не «УПАЛА».
  *
+ * 7.305: девять игровых лендингов (`GAME_LANDINGS`) — тоже в `MUST_LIVE`:
+ * текст и ссылки из кода, пазл из базы. Живой мало: каждый обязан показать
+ * заметку `data-testid="puzzle-unavailable"` на месте пазла — это
+ * доказательство, что сбой ДОШЁЛ до страницы, а не что пазл взялся
+ * откуда-то ещё. Сами игры (`/word-games/...`), рассказы и термины — по-
+ * прежнему граница с шапкой.
+ *
  *   node scripts/check-db-outage.mjs           # нужен готовый `next build`
  *   node scripts/check-db-outage.mjs --plant   # позитивный контроль судьи
  *
@@ -70,6 +77,15 @@ export const MUST_LIVE = [
   "/es/gramatica", "/es/alfabeto-cirilico",
   "/es/pricing", "/es/login", "/es/register", "/es/download",
 ];
+
+/** 7.305: игровые лендинги — живые при лежащей базе, с заметкой вместо пазла. */
+export const GAME_LANDINGS = [
+  "/es/sopa-de-letras-ruso", "/es/crucigramas-ruso-principiantes", "/es/juegos-para-aprender-ruso",
+  "/es/sopa-de-letras-ruso-comida", "/es/sopa-de-letras-ruso-familia", "/es/sopa-de-letras-ruso-ropa",
+  "/es/sopa-de-letras-ruso-ciudad", "/es/sopa-de-letras-ruso-clima", "/es/sopa-de-letras-ruso-compras",
+];
+MUST_LIVE.push(...GAME_LANDINGS);
+const OUTAGE_NOTE = /data-testid="puzzle-unavailable"/;
 
 function publicRoutes() {
   const root = join(process.cwd(), "src", "app", "[lang]");
@@ -134,7 +150,11 @@ function visibleText(html) {
 export function verdict(results) {
   const dead = results.filter((r) => r.kind === "УПАЛА");
   const notLive = results.filter((r) => MUST_LIVE.includes(r.path) && r.kind !== "живая");
-  return { dead, notLive, ok: dead.length === 0 && notLive.length === 0 };
+  // Лендинг живой, но без заметки — сбой до него не дошёл: судить нечего.
+  const noNote = results.filter(
+    (r) => GAME_LANDINGS.includes(r.path) && r.kind === "живая" && !OUTAGE_NOTE.test(r.body ?? ""),
+  );
+  return { dead, notLive, noNote, ok: dead.length === 0 && notLive.length === 0 && noNote.length === 0 };
 }
 
 async function fetchPage(path) {
@@ -222,11 +242,20 @@ function plant() {
   const v = verdict([{ path: "/es", kind: "граница" }, { path: "/es/stories/x", kind: "граница" }]);
   const ruleOk = !v.ok && v.notLive.length === 1 && v.dead.length === 0;
   console.log(`  ${ruleOk ? "СОШЛОСЬ" : "НЕ СОШЛОСЬ"}  граница на главной → красное; граница на рассказе → допустимо`);
+  // 7.305: лендинг игры — граница красная; живой без заметки — красный; живой с заметкой — зелёный.
+  const note = '<div data-testid="puzzle-unavailable" role="status">';
+  const landing = "/es/sopa-de-letras-ruso-comida";
+  const vBoundary = verdict([{ path: landing, kind: "граница", body: "" }]);
+  const vNoNote = verdict([{ path: landing, kind: "живая", body: "<h1>Sopa</h1>" }]);
+  const vNote = verdict([{ path: landing, kind: "живая", body: `<h1>Sopa</h1>${note}` }]);
+  const landingOk =
+    !vBoundary.ok && vBoundary.notLive.length === 1 && !vNoNote.ok && vNoNote.noNote.length === 1 && vNote.ok;
+  console.log(`  ${landingOk ? "СОШЛОСЬ" : "НЕ СОШЛОСЬ"}  лендинг игры: граница → красное; живой без заметки → красное; с заметкой → зелёное`);
   const { missing } = targetPaths(["/stories/[id]", "/new/[thing]"]);
   const missOk = missing.length === 1 && missing[0] === "/new/[thing]";
   console.log(`  ${missOk ? "СОШЛОСЬ" : "НЕ СОШЛОСЬ"}  динамический маршрут без образца → назван`);
-  const total = cases.length + 2;
-  const got = ok + (ruleOk ? 1 : 0) + (missOk ? 1 : 0);
+  const total = cases.length + 3;
+  const got = ok + (ruleOk ? 1 : 0) + (missOk ? 1 : 0) + (landingOk ? 1 : 0);
   console.log(`check:db-outage --plant: ${got} из ${total}`);
   process.exit(got === total ? 0 : 1);
 }
@@ -292,7 +321,8 @@ async function main() {
     const count = (k) => results.filter((r) => r.kind === k).length;
     console.log(
       `ИТОГ: страниц ${results.length}; живая ${count("живая")}, граница ${count("граница")} (из них 500 для бота ${results.filter((r) => r.blankForBots).length}), 404 ${count("404")}, переход ${count("переход")}, УПАЛА ${count("УПАЛА")}; ` +
-        `из ${MUST_LIVE.length} обязательных (*) не живы ${v.notLive.length}`,
+        `из ${MUST_LIVE.length} обязательных (*) не живы ${v.notLive.length}; ` +
+      `игровых лендингов живы ${results.filter((r) => GAME_LANDINGS.includes(r.path) && r.kind === "живая").length} из ${GAME_LANDINGS.length}`,
     );
     // Позитивный контроль на живом сервере: сбой должен ДОЙТИ хотя бы до одной
     // страницы (рассказ — содержимое целиком в базе). Если нигде нет ни
@@ -304,6 +334,7 @@ async function main() {
     if (!v.ok) {
       for (const r of v.dead) console.error(`✗ УПАЛА: ${r.path} (${r.status})`);
       for (const r of v.notLive) console.error(`✗ обязана жить при лежащей базе, а показала «${r.kind}»: ${r.path}`);
+      for (const r of v.noNote) console.error(`✗ лендинг живой, но без заметки «пазл недоступен» — сбой до него не дошёл: ${r.path}`);
       failed = true;
     }
   } catch (error) {
