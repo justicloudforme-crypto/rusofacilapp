@@ -1,4 +1,5 @@
 import { test as base, expect } from "@playwright/test";
+import { watchPage } from "./page-interactive";
 
 export { expect };
 
@@ -39,6 +40,9 @@ export const test = base.extend({
     // varying octets are far more addresses than a run has tests.
     const ip = `10.${testInfo.workerIndex % 256}.${Math.floor(testCounter / 256) % 256}.${testCounter % 256}`;
     await page.context().setExtraHTTPHeaders({ "x-forwarded-for": ip });
+    // 7.306, долг 424: журнал запросов и ошибок страницы с её открытия —
+    // чтобы `waitPageInteractive` при неудаче назвал, что висит.
+    watchPage(page);
     await provide(page);
   },
 });

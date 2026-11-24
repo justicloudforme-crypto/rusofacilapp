@@ -2,6 +2,7 @@ import { test, expect } from "./helpers/test";
 import { expectPageIsItself } from "./helpers/page-identity";
 import { loginWithSubscription } from "./helpers/auth";
 import { serveClipLocally } from "./helpers/audio-clip-origin";
+import { waitPageInteractive } from "./helpers/page-interactive";
 
 /**
  * ТО, ЧТО ЧЕЛОВЕК УЖЕ СЛУШАЛ, ОБЯЗАНО ИГРАТЬ И ВО ВТОРОЙ РАЗ — ЗАХОД 7.218.
@@ -71,6 +72,9 @@ async function clipState(page: import("@playwright/test").Page): Promise<ClipSta
 }
 
 async function playOnce(page: import("@playwright/test").Page): Promise<ClipState> {
+  // 7.306, долг 424 (влит 425): нажатие «Слушать» — только по ожившей
+  // странице; не ожила — провал с перечнем того, что висит.
+  await waitPageInteractive(page, 10_000);
   await page.getByRole("button", { name: /слушать|escuchar/i }).first().click();
   await page.waitForTimeout(4000);
   return clipState(page);

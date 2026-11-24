@@ -1,4 +1,5 @@
 import { defineConfig, devices } from "@playwright/test";
+import { TEST_SERVER_KEEP_ALIVE_MS } from "./e2e/helpers/test-server";
 
 const PORT = 3100;
 
@@ -194,7 +195,13 @@ export default defineConfig({
   // starts a fresh production build so tests exercise real prod output
   // (matches how the PWA/service-worker features actually behave).
   webServer: {
-    command: `next start -p ${PORT}`,
+    // 7.306, долг 412: `--keepAliveTimeout` — простаивающее соединение
+    // сервер тестов не закрывает раньше, чем кончится задание CI. С
+    // умолчанием Node (5 с + 1 с запаса) запрос теста, отправленный в миг
+    // закрытия, получал «read ECONNRESET» — клиент Playwright держит
+    // соединения без срока. Причина и замеры — e2e/helpers/test-server.ts;
+    // сторож — e2e/test-server-keepalive.spec.ts.
+    command: `next start -p ${PORT} --keepAliveTimeout ${TEST_SERVER_KEEP_ALIVE_MS}`,
     url: `http://localhost:${PORT}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
