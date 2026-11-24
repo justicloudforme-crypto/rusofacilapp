@@ -107,6 +107,10 @@ const StoriesPage = (await import("./[lang]/stories/page")).default;
 const GlossaryPage = (await import("./[lang]/glossary/page")).default;
 const VocabularyCategoryPage = (await import("./[lang]/vocabulary/[categoria]/page")).default;
 const { getCurrentUserForChrome } = await import("@/lib/auth");
+const LessonPage = (await import("./[lang]/courses/[level]/[lesson]/page")).default;
+const LevelPage = (await import("./[lang]/courses/[level]/page")).default;
+const lessons = await import("@/lib/lessons/content");
+const exams = await import("@/lib/exams/content");
 
 beforeEach(() => {
   hits.length = 0;
@@ -170,6 +174,43 @@ describe("страница переживает отказ чтения, ког�
     const element = await VocabularyCategoryPage({
       params: Promise.resolve({ lang: "es", categoria: "comida" }),
     } as never);
+    expect(element).toBeTruthy();
+  });
+
+  // ДОЛГ 295, заход 7.304. Урок и уровень курса живут в коде
+  // (`content.json`), база им только помогает — правками из админки,
+  // похожими рассказами, терминами. Прибор `scripts/check-db-outage.mjs`
+  // на `main` нашёл: при лежащей базе `/courses/a1` и `/courses/a1/1`
+  // отдавали 500 (в браузере — страница ошибки вместо урока).
+  it("урок: страничный загрузчик отдаёт версию из кода, а громкий — по-прежнему громкий", async () => {
+    const content = await lessons.getLessonContentForPage("a1", "1");
+    expect(hits).toContain("lesson.findUnique");
+    expect(content).toEqual(lessons.staticContentFor("a1", "1"));
+    expect(content?.grammar.paragraphs.length).toBeGreaterThan(0);
+    // API проверки ответов и PDF обязаны падать: проверять ответы по
+    // другой версии урока нельзя.
+    await expect(lessons.getLessonContent("a1", "2")).rejects.toThrow(/BLOCKED/);
+  });
+
+  it("экзамен: страничный загрузчик отдаёт версию из кода, громкий — громкий", async () => {
+    const exam = await exams.getExamContentForPage("a1", "a1-exam-1");
+    expect(hits).toContain("exam.findUnique");
+    expect(exam?.level).toBe("a1");
+    await expect(exams.getExamContent("a1", "a1-exam-2")).rejects.toThrow(/BLOCKED/);
+  });
+
+  it("/[lang]/courses/[level]/[lesson] — урок рисуется без похожих рассказов и терминов", async () => {
+    const element = await LessonPage({
+      params: Promise.resolve({ lang: "es", level: "a1", lesson: "3" }),
+    } as never);
+    expect(hits).toContain("story.findMany");
+    expect(hits).toContain("glossaryTerm.findMany");
+    expect(element).toBeTruthy();
+  });
+
+  it("/[lang]/courses/[level] — уровень рисуется с экзаменами из кода", async () => {
+    const element = await LevelPage({ params: Promise.resolve({ lang: "ru", level: "a2" }) } as never);
+    expect(hits).toContain("exam.findUnique");
     expect(element).toBeTruthy();
   });
 

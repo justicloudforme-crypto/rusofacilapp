@@ -57,6 +57,28 @@ export async function getLessonContent(
   });
 }
 
+/**
+ * ДОЛГ 295 (заход 7.304). То же, что {@link getLessonContent}, но для
+ * СТРАНИЦЫ урока: если таблица `Lesson` не читается (авария базы, квота
+ * Turso), страница получает версию урока из `content.json`, а не 500.
+ * Урок есть в коде у всех 120 слотов; цена отказа — правка из админки
+ * (локально правлены 14 из 120) не видна, пока база не вернётся.
+ * Запасная версия НЕ кешируется: следующий запрос снова спросит базу.
+ * API проверки ответов, PDF и звук зовут громкий `getLessonContent`
+ * намеренно — проверять ответы по другой версии урока нельзя.
+ */
+export async function getLessonContentForPage(
+  level: string,
+  lessonSlug: string
+): Promise<LessonContent | null> {
+  try {
+    return await getLessonContent(level, lessonSlug);
+  } catch (error) {
+    console.error(`[lessons] Lesson ${level}-${lessonSlug} unreadable — serving the bundled content.json version`, error);
+    return staticContentFor(level, lessonSlug);
+  }
+}
+
 /** Call after any write to a lesson's Lesson row (admin save, delete, or a
  * reseed) so the next read reflects it immediately instead of waiting out
  * the TTL. */
