@@ -48,6 +48,22 @@ export async function getExamContent(level: LevelSlug, examSlug: string): Promis
   });
 }
 
+/**
+ * ДОЛГ 295 (заход 7.304). Для СТРАНИЦ (уровень курса, страница экзамена):
+ * при отказе таблицы `Exam` — версия из `content.json` (все 12 экзаменов
+ * есть в коде), а не 500 всей страницы уровня. Не кешируется. Отправка
+ * попытки (`api/exams/.../attempt`) остаётся на громком `getExamContent`:
+ * оценивать ответы по другой версии экзамена нельзя.
+ */
+export async function getExamContentForPage(level: LevelSlug, examSlug: string): Promise<ExamContent | null> {
+  try {
+    return await getExamContent(level, examSlug);
+  } catch (error) {
+    console.error(`[exams] Exam ${level}/${examSlug} unreadable — serving the bundled content.json version`, error);
+    return staticExamFor(level, examSlug);
+  }
+}
+
 /** Call after any write to an exam's Exam row (admin save or delete) so the
  * next read reflects it immediately instead of waiting out the TTL. */
 export async function invalidateExamContentCache(level: string, examSlug: string) {

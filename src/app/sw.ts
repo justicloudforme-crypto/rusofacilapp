@@ -27,6 +27,7 @@ import {
   staleCacheNames,
 } from "@/lib/sw-cache-names";
 import { OFFLINE_INDEX_PATH, parseIndex } from "@/lib/offline-save";
+import { isOwnHealthAnswer } from "@/lib/health-tokens";
 import {
   AUDIO_CACHE_NAME,
   CACHE_BUDGET_BY_KEY,
@@ -276,7 +277,22 @@ const HEALTH_PATH = "/api/health";
 /** Попытка урока (`GET` — «intento anterior»), заход 7.237. */
 const LESSON_ATTEMPT_PATH = "/api/progress";
 
-async function serverAnswers(timeoutMs = 2500): Promise<boolean> {
+/**
+ * ПРИЧИНА ДОЛГА 278 — ЗАХОД 7.304. Проба спрашивала «жива ли СЕТЬ», а
+ * отвечал на неё вопрос «жива ли БАЗА»: `/api/health` делает `SELECT 1` и
+ * при лежащей базе отдаёт 503 `RF-DOWN`, а при медленной — отвечает не
+ * раньше своего срока `DB_TIMEOUT_MS` (2500 мс), то есть ровно тогда, когда
+ * проба уже сдалась. Жалоба 20.09.2026 пришла в день аварии квоты Turso
+ * (126 событий `BLOCKED` на `/[lang]/stories/[id]`, долг 290): воркер читал
+ * 503 как «сервера нет» и отдавал каркас, а каркас печатал «нет
+ * соединения». Теперь сервер, приславший СВОЙ ответ о здоровье (`RF-OK`
+ * или `RF-DOWN`), считается ответившим, а срок пробы — больше серверного.
+ * Чужой ответ (страница входа сети, заглушка посредника) жизни сервера не
+ * доказывает: в нём нет ни того, ни другого слова.
+ */
+const SERVER_PROBE_TIMEOUT_MS = 4000;
+
+async function serverAnswers(timeoutMs = SERVER_PROBE_TIMEOUT_MS): Promise<boolean> {
   const control = new AbortController();
   const timer = setTimeout(() => control.abort(), timeoutMs);
   try {
@@ -284,7 +300,8 @@ async function serverAnswers(timeoutMs = 2500): Promise<boolean> {
       cache: "no-store",
       signal: control.signal,
     });
-    return response.ok;
+    if (response.ok) return true;
+    return isOwnHealthAnswer(await response.text());
   } catch {
     return false;
   } finally {

@@ -22,3 +22,13 @@ export const HEALTH_OK_TOKEN = "RF-OK";
 /** Отказ. Нужен, чтобы в журнале монитора было видно: ответ пришёл от
  *  НАС, а не от прослойки CDN или от чужой заглушки. */
 export const HEALTH_DOWN_TOKEN = "RF-DOWN";
+
+/**
+ * Ответ СВОЕГО сервера о здоровье — и живой (`RF-OK`), и «база лежит»
+ * (`RF-DOWN`, 503). Долг 278 (7.304): для вопроса «жива ли сеть» оба
+ * значат одно — сервер ответил. Чужая страница (заглушка сети,
+ * посредник) ни одного из двух слов не несёт.
+ */
+export function isOwnHealthAnswer(body: string): boolean {
+  return body.includes(`"${HEALTH_OK_TOKEN}"`) || body.includes(`"${HEALTH_DOWN_TOKEN}"`);
+}

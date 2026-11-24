@@ -5,7 +5,7 @@ import { isLocale } from "@/i18n/config";
 import { getPageDictionary } from "@/i18n/page-dictionary";
 import { isLevelSlug, isLessonSlug, isFreeTrialLesson, lessonSlugsFor } from "@/lib/courses";
 import { getEntitlementTier } from "@/lib/entitlement";
-import { getLessonContent } from "@/lib/lessons/content";
+import { getLessonContentForPage } from "@/lib/lessons/content";
 import {
   getRelatedStoriesForLesson,
   getRelatedMediaForLesson,
@@ -57,7 +57,7 @@ export async function generateMetadata({
   // level) and is now genuinely visible to every visitor regardless of
   // subscription (see the page component below) — so it's an honest
   // description, not a description of content the reader can't see.
-  const content = await getLessonContent(level, lesson);
+  const content = await getLessonContentForPage(level, lesson);
   const description = content ? truncateForMeta(content.grammar.paragraphs.join(" ")) : levelDict.description;
   return {
     title,
@@ -82,16 +82,24 @@ export default async function LessonPage({
   const prevSlug = index > 0 ? slugs[index - 1] : null;
   const nextSlug = index < slugs.length - 1 ? slugs[index + 1] : null;
   const [fullContent, tier, ownerScope, relatedStoriesResult, allMedia, glossaryTerms] = await Promise.all([
-    getLessonContent(level, lesson),
+    getLessonContentForPage(level, lesson),
     getEntitlementTier(),
     // Names the browser-storage bucket the page's practice recordings go
     // into. Reads the signed session cookie, not the database — see
     // src/lib/recordings-owner.ts for why this page in particular must not
     // grow a second user lookup.
     getRecordingsOwnerScope(),
-    getRelatedStoriesForLesson(level, lesson),
+    // Долг 295 (7.304): похожие рассказы и термины — подсказки, а не урок.
+    // Отказ базы стоит только этих двух блоков ссылок, текст урока остаётся.
+    getRelatedStoriesForLesson(level, lesson).catch((error) => {
+      console.error("[lesson] related stories unreadable — rendering the lesson without them", error);
+      return { kind: "level" as const, stories: [] };
+    }),
     getAllMedia(),
-    getGlossaryTermsForLesson(level, lesson),
+    getGlossaryTermsForLesson(level, lesson).catch((error) => {
+      console.error("[lesson] glossary links unreadable — rendering the lesson without them", error);
+      return [];
+    }),
   ]);
   const relatedMediaResult = getRelatedMediaForLesson(level, lesson, allMedia);
   const grammarGuide = getGrammarGuideForLesson(lang, level, lesson);
