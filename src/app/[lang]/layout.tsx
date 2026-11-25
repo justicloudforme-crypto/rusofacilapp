@@ -3,8 +3,7 @@ import type { Metadata, Viewport } from "next";
 import { PT_Sans, PT_Serif, PT_Mono } from "next/font/google";
 import { notFound } from "next/navigation";
 import { SerwistProvider } from "@serwist/next/react";
-import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next";
+import SiteAnalytics from "@/components/SiteAnalytics";
 import "../globals.css";
 import { isLocale, locales } from "@/i18n/config";
 import { getPageDictionary } from "@/i18n/page-dictionary";
@@ -339,12 +338,10 @@ export default async function LangLayout({
             app it is not rendered at all (7.243, audit 7.241 Р10): an invite
             to a Telegram channel is a mark of the website. */}
         {!nativeShell && theme !== "reading" && <TelegramFloatButton label={dict.profile.telegramCta} />}
-        {/* Both are no-ops until Web Analytics / Speed Insights are turned
-            on for this project in the Vercel dashboard — see
-            vercel.com/rusofacilappcom/rusofacilapp → Analytics /
-            Speed Insights tabs. Safe to ship ahead of that toggle. */}
-        <Analytics />
-        <SpeedInsights />
+        {/* Vercel Web Analytics + Speed Insights. Admin pages and the
+            owner's marked browsers send nothing (run 7.310) — see
+            src/components/SiteAnalytics.tsx and src/lib/stats-opt-out.ts. */}
+        <SiteAnalytics />
       </body>
     </html>
   );
