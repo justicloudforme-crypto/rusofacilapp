@@ -4,6 +4,7 @@ import { getPageDictionary } from "@/i18n/page-dictionary";
 import { requireStaffUser } from "@/lib/admin-auth";
 import { isOwner } from "@/lib/roles";
 import AdminNav from "@/components/admin/AdminNav";
+import StatsOptOutBanner from "@/components/admin/StatsOptOutBanner";
 
 export default async function AdminLayout({
   children,
@@ -21,6 +22,7 @@ export default async function AdminLayout({
       <p className="mt-1 text-sm text-foreground/60">
         {user.email} · {dict.admin.roleLabels[user.role as "owner" | "admin"]}
       </p>
+      <StatsOptOutBanner copy={dict.admin.statsOptOut} />
       <AdminNav lang={lang} dict={dict.admin} isOwner={isOwner(user.role)} />
       <div className="mt-8">{children}</div>
     </div>

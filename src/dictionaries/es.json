@@ -1379,6 +1379,13 @@
     }
   },
   "admin": {
+    "statsOptOut": {
+      "excluded": "En este navegador tus visitas no cuentan en las estadísticas",
+      "counted": "En este navegador tus visitas cuentan en las estadísticas",
+      "exclude": "No contar mis visitas",
+      "include": "Contar mis visitas",
+      "storageRefused": "Este navegador no permite guardar la marca (ventana privada o datos del sitio bloqueados)."
+    },
     "title": "Panel de administración",
     "roleLabels": {
       "owner": "Propietario",
