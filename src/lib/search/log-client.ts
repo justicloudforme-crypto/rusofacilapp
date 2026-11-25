@@ -1,4 +1,5 @@
 import type { LoggedLang } from "./demand";
+import { shouldSkipStats } from "../stats-opt-out";
 
 /**
  * Отправка одной записи спроса из браузера.
@@ -22,6 +23,9 @@ export function logSearchDemand(payload: {
 }): void {
   if (typeof navigator === "undefined") return;
   if (!payload.query.trim()) return;
+  // Заход 7.310: поиск владельца (браузер с пометкой «не считать») и поиск
+  // со страниц админки — не спрос учеников, в журнал не идут.
+  if (typeof location !== "undefined" && shouldSkipStats(location.href)) return;
 
   const body = JSON.stringify(payload);
   try {
