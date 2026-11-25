@@ -187,7 +187,8 @@ const IDENT_ALLOWED = new Map([
 // может записать и её исправление. С 7.282 сюда же полный текст открытых
 // долгов (`debts-open.md`): эти строки до 11.11.2026 стояли в самом
 // PROGRESS.md и переехали дословно (долг 80 цитирует имя файла StoreKit).
-const LOG_FILES = /^docs\/progress-archive\/(runs-\d{4}-\d{2}|debts-closed|debts-open)\.md$/;
+// С 7.308 архив закрытых — два файла по номеру (debts-closed.md, debts-closed-2.md).
+const LOG_FILES = /^docs\/progress-archive\/(runs-\d{4}-\d{2}|debts-closed(-\d+)?|debts-open)\.md$/;
 
 const ALLOWED = new Map([
   [
@@ -273,7 +274,7 @@ const ALLOWED = new Map([
   // который стоял здесь с `hits: null`. Части заморожены (их целость
   // стережёт check:progress-size), поэтому число закреплено точно: правка
   // архива — отдельное событие, а не тихая опечатка. Журналы, которые
-  // продолжают расти (runs-ГГГГ-ММ.md, debts-closed.md), — ниже в LOG_FILES.
+  // продолжают расти (runs-ГГГГ-ММ.md, debts-closed*.md), — ниже в LOG_FILES.
   [
     "docs/progress-archive/INDEX.md",
     { hits: 1, why: "Frozen verbatim copy of the old PROGRESS.md (7.270); it quotes wrong spellings as evidence, like the log it came from." },

@@ -62,6 +62,7 @@ const MAIN_QUESTIONS: [string, string][] = [
   ["where are the open debts", "## 6. ДОЛГИ"],
   ["how are open debts written down", "условие → триггер → следствие"],
   ["where are the closed debts", "docs/progress-archive/debts-closed.md"],
+  ["where are the closed debts numbered 250 and up", "docs/progress-archive/debts-closed-2.md"],
   ["what waits for the owner", "## 7. ЖДЁТ РЕШЕНИЯ ВЛАДЕЛЬЦА"],
   ["what happened recently", "## 8. ПОСЛЕДНИЕ ЗАХОДЫ"],
   ["what is in the archive", "## 9. АРХИВ — ОГЛАВЛЕНИЕ"],
