@@ -42,11 +42,42 @@
 // закрытых там нет. Иначе полный текст долга мог бы пропасть молча — или
 // остаться висеть после закрытия.
 //
+// АРХИВ ЗАКРЫТЫХ — ДВА ФАЙЛА С 25.11.2026 (7.308, предложение 7.307).
+// debts-closed.md подошёл к пределу архива (985 131 байт при 1 000 000,
+// check:progress-size), а предел не поднимается. Раздел — ПО НОМЕРУ:
+// debts-closed.md держит №1–249, debts-closed-2.md — №250 и выше (и все
+// новые). Счёт по-прежнему один — по всем файлам сразу. Две новые проверки:
+// строка не в файле своего диапазона — отказ (иначе закрытие «на место по
+// номеру» перестаёт быть однозначным и первый файл снова растёт), и файл
+// `debts-closed*.md`, которого нет в списке CLOSED_FILES, — отказ (иначе
+// третий файл, заведённый без правки скрипта, выпал бы из счёта молча, а
+// его строки читались бы как дыры — или, хуже, их номера выдали бы снова).
+//
 // Контроль: `node scripts/count-debts.mjs --plant`.
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 const PLANT = process.argv.includes("--plant");
 const MAIN = "PROGRESS.md";
-const CLOSED = "docs/progress-archive/debts-closed.md";
+const ARCHIVE_DIR = "docs/progress-archive";
+/** Архив закрытых по диапазонам номеров (7.308). Новый файл — сюда же. */
+const CLOSED_FILES = [
+  { path: `${ARCHIVE_DIR}/debts-closed.md`, from: 1, to: 249 },
+  { path: `${ARCHIVE_DIR}/debts-closed-2.md`, from: 250, to: Infinity },
+];
+const CLOSED = CLOSED_FILES.map((f) => f.path).join(" + ");
+const readClosed = () => CLOSED_FILES.map((f) => ({ ...f, text: readFileSync(f.path, "utf8") }));
+/** Строки, лежащие не в файле своего диапазона: [{ n, file }]. */
+function outOfRange(parts) {
+  const bad = [];
+  for (const f of parts) {
+    for (const r of collect(f.text)) if (r.n < f.from || r.n > f.to) bad.push({ n: r.n, file: f.path });
+  }
+  return bad;
+}
+/** Файлы debts-closed*.md в папке архива, которых нет в CLOSED_FILES. */
+function unlisted(names) {
+  const listed = CLOSED_FILES.map((f) => f.path.slice(ARCHIVE_DIR.length + 1));
+  return names.filter((n) => /^debts-closed.*\.md$/.test(n) && !listed.includes(n));
+}
 const OPEN_FULL = "docs/progress-archive/debts-open.md";
 // Явный аргумент — старый режим «один файл» (для разовых сверок).
 const ONLY = PLANT ? null : (process.argv[2] ?? null);
@@ -129,8 +160,14 @@ if (PLANT) {
   // Подсадка: строка таблицы в состоянии, которого счётчик не знает.
   // Именно так и выглядела бы «потерянная строка», о которой шёл спор.
   const mainText = readFileSync(MAIN, "utf8");
-  const closedText = readFileSync(CLOSED, "utf8");
+  const closedParts = readClosed();
+  const closedText = closedParts.map((f) => f.text).join("\n");
   const body = mainText + "\n" + closedText;
+  const healthyRange = outOfRange(closedParts);
+  const healthyUnlisted = unlisted(readdirSync(ARCHIVE_DIR));
+  if (healthyRange.length || healthyUnlisted.length) {
+    console.log(`  ЛОЖНО КРАСНЫЙ — архив закрытых: не в своём файле ${JSON.stringify(healthyRange)}, вне списка ${healthyUnlisted.join(", ")}`);
+  }
   const healthy = summarise(collect(body));
   const place = misplaced(mainText, closedText);
   if (place.inMain.length || place.inClosed.length) {
@@ -215,18 +252,51 @@ if (PLANT) {
   const caught11 = o11.notOpen.includes(firstClosed.n);
   console.log(`  ${caught11 ? "поймано" : "ПРОПУЩЕНО"} — закрытая строка ${firstClosed.n} попала в ${OPEN_FULL}`);
 
-  ok &&= !place.inMain.length && !place.inClosed.length && syncOk(healthySync);
-  ok &&= caught1 && caught2 && caught3 && caught4 && caught5 && caught6 && caught7 && caught8 && caught9 && caught10 && caught11;
-  console.log(ok ? "count:debts --plant — 11 из 11 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
+  // 12 и 13. Архив закрытых в двух файлах (7.308): строка второго файла
+  //    переложена в первый; лишний файл debts-closed-3.md вне списка.
+  const [p1, p2] = closedParts;
+  const moved = collect(p2.text)[0];
+  const movedLine = p2.text.split("\n").find((l) => new RegExp(`^\\|\\s*${moved.n}\\s*\\|`).test(l));
+  const r12 = outOfRange([{ ...p1, text: p1.text + "\n" + movedLine }, { ...p2, text: p2.text.replace(movedLine, "") }]);
+  const caught12 = r12.length === 1 && r12[0].n === moved.n && r12[0].file === p1.path;
+  console.log(`  ${caught12 ? "поймано" : "ПРОПУЩЕНО"} — закрытая строка ${moved.n} переложена в ${p1.path} (её диапазон — ${p2.from}+)`);
+  const u13 = unlisted([...readdirSync(ARCHIVE_DIR), "debts-closed-3.md"]);
+  const caught13 = u13.length === 1 && u13[0] === "debts-closed-3.md";
+  console.log(`  ${caught13 ? "поймано" : "ПРОПУЩЕНО"} — файл debts-closed-3.md заведён, а в CLOSED_FILES не вписан`);
+
+  ok &&= !place.inMain.length && !place.inClosed.length && syncOk(healthySync) && !healthyRange.length && !healthyUnlisted.length;
+  ok &&= caught1 && caught2 && caught3 && caught4 && caught5 && caught6 && caught7 && caught8 && caught9 && caught10 && caught11 && caught12 && caught13;
+  console.log(ok ? "count:debts --plant — 13 из 13 подсадок, 1 из 1 отрицательный контроль" : "count:debts --plant — FAILED");
   process.exitCode = ok ? 0 : 1;
 } else {
   const mainText = ONLY ? readFileSync(ONLY, "utf8") : readFileSync(MAIN, "utf8");
-  const closedText = ONLY ? "" : readFileSync(CLOSED, "utf8");
+  const closedParts = ONLY ? [] : readClosed();
+  const closedText = closedParts.map((f) => f.text).join("\n");
   const s = summarise(collect(mainText + "\n" + closedText));
   print(s);
   if (!ONLY) {
     const place = misplaced(mainText, closedText);
-    console.log(`  файлы: ${MAIN} — ${collect(mainText).length} строк, ${CLOSED} — ${collect(closedText).length} строк`);
+    console.log(
+      `  файлы: ${MAIN} — ${collect(mainText).length} строк, ` +
+        closedParts.map((f) => `${f.path} (№${f.from}–${f.to === Infinity ? "…" : f.to}) — ${collect(f.text).length} строк`).join(", "),
+    );
+    const range = outOfRange(closedParts);
+    if (range.length) {
+      console.error(
+        `count:debts — ОТКАЗ: строки архива закрытых не в файле своего диапазона: ` +
+          range.map((r) => `${r.n} в ${r.file}`).join(", ") +
+          `.\n  Раздел по номеру (7.308): ${CLOSED_FILES.map((f) => `${f.path} — №${f.from}–${f.to === Infinity ? "…" : f.to}`).join("; ")}.`,
+      );
+      process.exitCode = 1;
+    }
+    const extra = unlisted(readdirSync(ARCHIVE_DIR));
+    if (extra.length) {
+      console.error(
+        `count:debts — ОТКАЗ: файлы архива закрытых вне счёта: ${extra.join(", ")}.\n` +
+          `  Новый файл архива — вписать в CLOSED_FILES в scripts/count-debts.mjs с диапазоном номеров.`,
+      );
+      process.exitCode = 1;
+    }
     if (place.inMain.length) {
       console.error(
         `count:debts — ОТКАЗ: закрытые строки в ${MAIN}: ${place.inMain.join(", ")}.\n` +

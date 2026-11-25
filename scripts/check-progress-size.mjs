@@ -18,6 +18,12 @@
 //      доказательство «ни одна строка не потеряна», которое повторяется
 //      на каждом прогоне, а не один раз в отчёте.
 //
+//   4. (7.308) Архив закрытых долгов — debts-closed.md (№1–249) и
+//      debts-closed-2.md (№250+): оба файла на месте и каждый под
+//      ARCHIVE_LIMIT; отчёт печатает вес и запас каждого поимённо. Раздел
+//      по номерам стережёт count:debts. Подошёл второй к пределу —
+//      заводится третий, предел не поднимается.
+//
 // Красный по п.1 чинится переносом истории в архив месяца
 // (docs/progress-archive/runs-ГГГГ-ММ.md), а не подъёмом предела.
 //
@@ -37,6 +43,8 @@ export const ARCHIVE_DIR = "docs/progress-archive";
  * ≈177 КБ — дословные строки 94 открытых долгов, «правил» и снятых. */
 export const MAIN_LIMIT = 300_000;
 export const ARCHIVE_LIMIT = 1_000_000;
+/** Архив закрытых долгов (7.308): раздел по номеру, см. scripts/count-debts.mjs. */
+export const CLOSED_DEBT_FILES = ["debts-closed.md", "debts-closed-2.md"];
 export const BODY_MARK = "\n<!-- progress-archive:body -->\n";
 export const FROZEN_PARTS = [
   "part-01-header-sections-0-6.md",
@@ -74,6 +82,9 @@ export function scan({ main, archive }) {
   for (const [name, text] of archive) {
     const bytes = Buffer.byteLength(text);
     if (bytes > ARCHIVE_LIMIT) failures.push(`${ARCHIVE_DIR}/${name} — ${bytes} байт при пределе ${ARCHIVE_LIMIT}`);
+  }
+  for (const name of CLOSED_DEBT_FILES) {
+    if (!archive.has(name)) failures.push(`${ARCHIVE_DIR}/${name} — файла архива закрытых долгов нет`);
   }
   const bodies = [];
   for (const name of FROZEN_PARTS) {
@@ -115,6 +126,13 @@ function report(r, input) {
       `крупнейший ${Math.max(...[...input.archive.values()].map((t) => Buffer.byteLength(t)))} байт (предел ${ARCHIVE_LIMIT}); ` +
       `склейка частей ${r.joinedBytes} байт, sha256 ${r.sha.slice(0, 12)}…`,
   );
+  for (const name of CLOSED_DEBT_FILES) {
+    const t = input.archive.get(name);
+    if (t !== undefined) {
+      const b = Buffer.byteLength(t);
+      console.log(`  ${ARCHIVE_DIR}/${name}: ${b} байт, запас ${ARCHIVE_LIMIT - b} (${((100 * b) / ARCHIVE_LIMIT).toFixed(1)} % предела)`);
+    }
+  }
   for (const f of r.failures) console.error(`  ОТКАЗ: ${f}`);
   console.log(r.failures.length ? `check:progress-size — ${r.failures.length} отказ(ов)` : "check:progress-size — чисто");
   return r.failures.length === 0;
@@ -160,6 +178,19 @@ function plantControls() {
       name: "файл архива раздут сверх 1 МБ",
       input: withArchive((a) => a.set("runs-2099-01.md", "я".repeat(ARCHIVE_LIMIT))),
       expect: /runs-2099-01\.md — \d+ байт при пределе/,
+    },
+    {
+      name: `${CLOSED_DEBT_FILES[1]} раздут на 1 байт сверх предела`,
+      input: withArchive((a) => {
+        const t = a.get(CLOSED_DEBT_FILES[1]) ?? "";
+        a.set(CLOSED_DEBT_FILES[1], t + "x".repeat(ARCHIVE_LIMIT - Buffer.byteLength(t) + 1));
+      }),
+      expect: new RegExp(`${CLOSED_DEBT_FILES[1].replace(/[.]/g, "\\.")} — \\d+ байт при пределе`),
+    },
+    {
+      name: `${CLOSED_DEBT_FILES[1]} удалён`,
+      input: withArchive((a) => a.delete(CLOSED_DEBT_FILES[1])),
+      expect: /файла архива закрытых долгов нет/,
     },
     {
       name: `метка начала тела задвоена в ${part}`,
