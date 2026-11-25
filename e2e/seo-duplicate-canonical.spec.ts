@@ -38,10 +38,8 @@ function canonicalOf(html: string): string[] {
   return out;
 }
 
-// Запросы без браузера: одного проекта достаточно, второй повторял бы то же.
-test.beforeEach(({}, testInfo) => {
-  test.skip(testInfo.project.name !== "chromium", "проверка HTTP — только в проекте chromium");
-});
+// Запросы без браузера: оба проекта Playwright проверяют одно и то же
+// (≈2 с), пропуск ради экономии запрещён `check:e2e-coverage` (7.52).
 
 test.describe("дубли без canonical (GSC)", () => {
   for (const path of [
