@@ -157,8 +157,14 @@ export default defineConfig({
        * оболочку (снимает воркер, каркас на навигацию, `setOffline`), а
        * WebKit под Playwright навигацию без сети до документа не доводит.
        */
+      /**
+       * `story-sticky-player-anchor.spec.ts` (заход 7.313, долг 427) —
+       * петля прилипшего плеера рождалась якорением прокрутки Chromium
+       * (Android: сайт и приложение) и проверяется в профиле Pixel 7;
+       * проба в WebKit до и после правки одинакова (карточка держится).
+       */
       testIgnore:
-        /(story-word-offline|story-resume-cold-cache|story-touch-seek|story-preplay-skip|story-downloaded-online-fresh|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell|offline-saved-two-deploys)\.spec\.ts/,
+        /(story-sticky-player-anchor|story-word-offline|story-resume-cold-cache|story-touch-seek|story-preplay-skip|story-downloaded-online-fresh|sw-cache-budget|sw-audio-replay|sw-offline-screen|offline-shell|offline-saved-content|offline-app-saved|offline-orphan-row|offline-downloads|offline-downloads-remove|offline-downloads-survive|offline-downloads-rollout|offline-saved-rows|offline-progress-outbox-restart|offline-progress-outbox-shell|offline-saved-two-deploys)\.spec\.ts/,
     },
     /**
      * The voice-recording cycle "in the shape of iOS": WebKit, an iPhone
