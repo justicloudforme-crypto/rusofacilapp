@@ -141,9 +141,15 @@ async function probePage(browser, base, target, { breakAudio, audioHostRe, timeo
     userAgent: "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 RFListenSweep",
   });
   try {
+    // Подмена — на весь КОНТЕКСТ, не на вкладку: звук уроков и медиа идёт
+    // через service worker сайта (CacheFirst, `src/app/sw.ts`), а запросы
+    // воркера `page.route` не видит. Проба 7.311 на раннере: с `page.route`
+    // «урок A1/1 /es» прошёл при битом звуке (воркер успел включиться до
+    // нажатия) — 10 из 11 красных вместо 11. `context.route` в Chromium
+    // ловит и запросы воркера.
+    if (breakAudio) await ctx.route((url) => audioHostRe.test(url.href), (route) => route.fulfill({ status: 404, contentType: "text/plain", body: "rf-break-audio" }));
     const page = await ctx.newPage();
     await page.addInitScript(mediaSpy);
-    if (breakAudio) await page.route((url) => audioHostRe.test(url.href), (route) => route.fulfill({ status: 404, contentType: "text/plain", body: "rf-break-audio" }));
     const audioResponses = [];
     let audioBytes = 0;
     page.on("response", async (r) => {
