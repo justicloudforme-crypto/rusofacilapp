@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "./db";
 import { bankKey } from "./translation-normalize";
+import { lookupBatchKey } from "./word-bank-batches";
 
 /**
  * СВОЙ банк переводов «русское слово → испанский» — то, что спрашивается
@@ -26,6 +27,11 @@ import { bankKey } from "./translation-normalize";
  *     целиком — соврать. Правило отсева одно на все три таблицы и живёт
  *     в `bankKey` (`translation-normalize.ts`).
  *
+ *  4. ПАРТИИ В КОДЕ (`word-bank-batches/`, долг 171, заход 7.312) — словоформы
+ *     из словарей уроков, которых нет ни в одной таблице. Спрашиваются
+ *     последними и без чтения базы, поэтому отвечают и при отказе базы.
+ *     Партия 1 — 150 форм, покрытие словоупотреблений 32,1 % → 38,7 %.
+ *
  * ЗАМЕЧАНИЕ К ЧИСЛУ 48,9 % ИЗ 7.187. Тот замер считал словоформы ВНУТРИ
  * многословных строк («образ мышления» — две), и потому назвал покрытие
  * 48,9 %. Реализуемо оно не полностью: перевести отдельное слово из
@@ -39,7 +45,7 @@ import { bankKey } from "./translation-normalize";
  */
 export interface BankHit {
   translation: string;
-  source: "flashcard" | "glossary" | "idiom";
+  source: "flashcard" | "glossary" | "idiom" | "lesson";
 }
 
 /** Сколько слов берётся за один заход предзагрузки. Абзац — 40–60 слов. */
@@ -93,10 +99,17 @@ export async function lookupWordBank(words: readonly string[]): Promise<Map<stri
       for (const idiom of idioms) remember(idiom.phrase, idiom.spanishEquivalent, "idiom");
     }
   } catch (error) {
-    // Банк — ускорение, а не единственный путь: при отказе чтения тап
-    // уходит в чужой сервис, как он ходил до 7.188.
-    console.error("[word-bank] чтение банка отказало, тап уйдёт наружу", error);
-    return found;
+    // Банк — ускорение, а не единственный путь: при отказе чтения слово,
+    // которого нет в партиях ниже, уходит в чужой сервис, как до 7.188.
+    console.error("[word-bank] чтение банка отказало, отвечают только партии в коде", error);
+  }
+
+  // Партии в коде — последними и без базы: ответят и тогда, когда чтение
+  // базы отказало выше (долг 171, заход 7.312).
+  for (const key of keys) {
+    if (found.has(key)) continue;
+    const translation = lookupBatchKey(key);
+    if (translation) found.set(key, { translation, source: "lesson" });
   }
 
   return found;
