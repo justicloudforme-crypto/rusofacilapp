@@ -118,7 +118,7 @@ describe("GET /api/dictionary/translate — отказ чужого сервис
   it("ПОЗИТИВНЫЙ КОНТРОЛЬ: подсаженный «MYMEMORY WARNING…» опознан отказом", async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => QUOTA_REFUSAL_BODY });
 
-    const res = await GET(fakeRequest("дед"));
+    const res = await GET(fakeRequest("старик"));
     const body = await res.json();
 
     expect(res.status).toBe(502);
@@ -129,17 +129,17 @@ describe("GET /api/dictionary/translate — отказ чужого сервис
   it("ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ: настоящий перевод проходит", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ responseStatus: 200, quotaFinished: false, matches: [{ translation: "abuelo", match: 1 }] }),
+      json: async () => ({ responseStatus: 200, quotaFinished: false, matches: [{ translation: "viejo", match: 1 }] }),
     });
 
-    const res = await GET(fakeRequest("дед"));
+    const res = await GET(fakeRequest("старик"));
     expect(res.status).toBe(200);
-    expect((await res.json()).translation).toBe("abuelo");
+    expect((await res.json()).translation).toBe("viejo");
   });
 
   it("отказ не запирается в кэше: no-store", async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => QUOTA_REFUSAL_BODY });
-    const res = await GET(fakeRequest("дед"));
+    const res = await GET(fakeRequest("старик"));
     expect(res.headers.get("Cache-Control")).toBe("no-store");
   });
 
@@ -153,5 +153,29 @@ describe("GET /api/dictionary/translate — отказ чужого сервис
     const res = await GET(fakeRequest("бабушка"));
     expect(res.status).toBe(200);
     expect((await res.json()).translation).toBe("abuela");
+  });
+
+  it("СЛОВО ИЗ ПАРТИИ БАНКА (долг 171): ответ из урока, 0 запросов наружу", async () => {
+    const res = await GET(fakeRequest("Ему"));
+    const body = await res.json();
+
+    expect(fetchMock).toHaveBeenCalledTimes(0);
+    expect(res.status).toBe(200);
+    expect(body).toEqual({ word: "Ему", translation: "a él", source: "lesson" });
+    expect(res.headers.get("Cache-Control")).toContain("s-maxage=");
+  });
+
+  it("слово из партии отвечается и при отказе чтения базы", async () => {
+    flashcardFindMany.mockRejectedValue(new Error("база не отвечает"));
+    const res = await GET(fakeRequest("хорошо"));
+
+    expect(fetchMock).toHaveBeenCalledTimes(0);
+    expect(await res.json()).toMatchObject({ translation: "bien", source: "lesson" });
+  });
+
+  it("карточка в базе сильнее партии: если слово стало карточкой, отвечает карточка", async () => {
+    flashcardFindMany.mockResolvedValue([{ russian: "ему", translationEs: "a él (dativo)" }]);
+    const body = await (await GET(fakeRequest("ему"))).json();
+    expect(body).toMatchObject({ translation: "a él (dativo)", source: "flashcard" });
   });
 });
