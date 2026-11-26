@@ -1,6 +1,7 @@
 import { devices } from "@playwright/test";
 import { test, expect } from "./helpers/test";
 import { expectPageIsItself } from "./helpers/page-identity";
+import { loginWithSubscription } from "./helpers/auth";
 
 /**
  * ПРИЛИПШИЙ ПЛЕЕР НЕ ДЁРГАЕТ СТРАНИЦУ И НЕ ЗАКРЫВАЕТ КАРТОЧКУ СЛОВА —
@@ -28,12 +29,16 @@ const { defaultBrowserType: _engine, ...pixel7 } = devices["Pixel 7"];
 void _engine;
 test.use(pixel7);
 
-const STORY_TITLE = "Снегурочка";
+// Рассказ из образцов базы CI (`e2e/fixtures/stories.json`) — тот же, что
+// у других спек плеера: с полной начиткой, длиной как «Снегурочка» замера
+// 7.313 (805 и 795 знаков). Вход с подпиской — чтобы текст был целиком и
+// в CI, и в местной базе (там рассказ платный, гостю — один абзац).
+const STORY_TITLE = "День стирки";
 
 test("плеер, прилипший на границе, стоит, и карточка слова не закрывается", async ({ page }) => {
-
-  await page.goto("/es/stories");
-  const link = page.locator('a[href^="/es/stories/"]').filter({ hasText: STORY_TITLE }).first();
+  await loginWithSubscription(page);
+  await page.goto("/ru/stories");
+  const link = page.locator('a[href^="/ru/stories/"]').filter({ hasText: STORY_TITLE }).first();
   const path = new URL((await link.getAttribute("href"))!, "http://localhost").pathname;
   await page.goto(path);
   await expectPageIsItself(page, path, `рассказ «${STORY_TITLE}»`);
