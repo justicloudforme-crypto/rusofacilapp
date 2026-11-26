@@ -112,6 +112,11 @@ const HEALTH_OK_TOKEN = "RF-OK";
  *  был добавлен в индекс. */
 const SMOKE_USER_AGENT = "RFProdSmoke";
 
+/** Слово первой партии своего банка переводов (долг 171,
+ *  `src/lib/word-bank-batches/batch-01.json`) и признак ответа из банка. */
+const WORD_BANK_PROBE = "почти";
+const WORD_BANK_PROBE_TOKEN = '"source":"lesson"';
+
 function dictionary(lang) {
   return JSON.parse(readFileSync(`src/dictionaries/${lang}.json`, "utf-8"));
 }
@@ -140,6 +145,14 @@ export function targets() {
     // браузер редирект проглотил бы и число переходов не показал.
     { name: "кабинет гостю → один 307", path: "/es/profile", redirect: { status: 307, location: /\/es\/login\?redirectTo=/ } },
     { name: "/api/health", path: "/api/health", json: { contains: HEALTH_OK_TOKEN, status: 200 } },
+    // Долг 171 (7.312): слово из партии своего банка отдаётся из банка
+    // (перевод урока), а не из чужого MyMemory. Красное — партия выпала
+    // из выката или порядок источников сломан.
+    {
+      name: "перевод слова из партии своего банка",
+      path: `/api/dictionary/translate?word=${encodeURIComponent(WORD_BANK_PROBE)}`,
+      json: { contains: WORD_BANK_PROBE_TOKEN, status: 200 },
+    },
   ];
 }
 

@@ -81,4 +81,12 @@ describe("GET /api/dictionary/bank — словарь видимого абза�
     const res = await GET(fakeRequest("дед"));
     expect(res.headers.get("Cache-Control")).toContain("s-maxage=");
   });
+
+  it("предзагрузка отдаёт и слова партии банка (долг 171) — без базы и без запросов наружу", async () => {
+    const body = await (await GET(fakeRequest("ему,вдруг,показывает"))).json();
+
+    expect(fetchMock).toHaveBeenCalledTimes(0);
+    expect(body.translations).toEqual({ ему: "a él", вдруг: "de repente" });
+    expect(body.found).toBe(2);
+  });
 });
