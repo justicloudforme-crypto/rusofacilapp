@@ -19,6 +19,17 @@ import { SITE_URL } from "../src/lib/site";
  *   - `www.…` — 308 на апекс с тем же путём и параметрами (7.112,
  *     `src/lib/canonical-host.ts`).
  *
+ * ЗАХОД 7.311 — рассказы по длинному коду (`/es/stories/cmsxtq5u7…`, в том же
+ * отчёте, обход Google 30.08.2026). Адрес с кодом — не копия: это и есть
+ * ЕДИНСТВЕННЫЙ адрес рассказа. Рассказ в базе находится только по `id`
+ * (`db.story.findUnique({ where: { id } })`, слага у `Story` нет), карта
+ * сайта перечисляет все 325 × 2 рассказа этими же адресами
+ * (`src/app/sitemap.ts`), а `rel=canonical` указывает на себя с 28.08.2026
+ * (коммит 18d66c9b) — то есть стоял и при обходе 30.08. Замер живого сайта
+ * 25.11.2026 по трём адресам из отчёта: `/es` и `/ru` — 200 и canonical на
+ * себя, `www.` — 308 на апекс, несуществующий код — 404. Правки сайта нет;
+ * ниже — то же на местной базе (код рассказа из фикстуры e2e).
+ *
  * Статический сторож `src/lib/route-metadata.test.ts` проверяет, что каждая
  * страница ЗОВЁТ `routeAlternates` со своим путём. Этот файл проверяет то,
  * что видит Google: код ответа, `Location` и `rel=canonical` в отданном
@@ -90,6 +101,30 @@ test.describe("дубли без canonical (GSC)", () => {
       });
       expect(res.status()).toBe(308);
       expect(res.headers()["location"]).toBe(`${SITE_URL}${path}`);
+    });
+  }
+
+  // 7.311: адрес рассказа по коду — единственный адрес рассказа, canonical на себя.
+  const STORY_ID = "e2e-fixture-story-dia-de-colada";
+  for (const lang of ["es", "ru"]) {
+    test(`/${lang}/stories/<код> — 200 и canonical на себя`, async ({ request }) => {
+      const res = await request.get(`/${lang}/stories/${STORY_ID}`, { maxRedirects: 0 });
+      expect(res.status()).toBe(200);
+      expect(canonicalOf(await res.text())).toEqual([`${SITE_URL}/${lang}/stories/${STORY_ID}`]);
+    });
+
+    test(`/${lang}/stories/<несуществующий код> — 404, не ошибка`, async ({ request }) => {
+      const res = await request.get(`/${lang}/stories/cmzz0000000000000000000000`, { maxRedirects: 0 });
+      expect(res.status()).toBe(404);
+    });
+
+    test(`www/${lang}/stories/<код> — 308 на апекс с тем же путём`, async ({ request }) => {
+      const res = await request.get(`/${lang}/stories/${STORY_ID}`, {
+        maxRedirects: 0,
+        headers: { host: "www.rusofacilapp.com" },
+      });
+      expect(res.status()).toBe(308);
+      expect(res.headers()["location"]).toBe(`${SITE_URL}/${lang}/stories/${STORY_ID}`);
     });
   }
 });
