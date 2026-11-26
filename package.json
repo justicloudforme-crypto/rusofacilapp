@@ -348,6 +348,8 @@
     "check:silent-listen": "node scripts/check-silent-listen.mjs",
     "check:silent-listen:plant": "node scripts/check-silent-listen.mjs --plant",
     "check:silent-listen:prod": "node scripts/check-silent-listen.mjs --base=https://rusofacilapp.com",
+    "check:silent-listen:play": "node scripts/check-silent-listen.mjs --play --base=https://rusofacilapp.com",
+    "check:silent-listen:play:plant": "node scripts/check-silent-listen.mjs --play --plant",
     "check:visitor-country:prod": "node scripts/check-visitor-country.mjs --base=https://rusofacilapp.com --expect=abroad",
     "check:visitor-country:plant": "node scripts/check-visitor-country.mjs --plant",
     "check:prod-reads": "node scripts/prod-read-budget.mjs",
