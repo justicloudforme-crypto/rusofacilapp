@@ -33,6 +33,19 @@
 # заводится: это не «сайт упал», а «у части рассказов пропал звук», и
 # разбирается он по журналу шага «Обход живого сайта».
 #
+# НАЖАТИЕ НАСТОЯЩИМ БРАУЗЕРОМ (7.311, долг 124) — второе задание того же
+# обхода. Первое читает разметку рассказов `/es` и шлёт HEAD к файлам; оно не
+# видит уроков и медиа (их адрес звука приходит после загрузки страницы),
+# не видит `/ru` и не проверяет, что нажатие ЗАПУСКАЕТ звук. Второе задание
+# открывает Chromium гостем на выборке бесплатных страниц — рассказы «Репка»
+# и «Снегурочка», уроки A1/1, A1/2, A2/1, медиа «Катюша», алфавит; `/es` и
+# `/ru` (11 страниц), — жмёт первую видимую кнопку «слушать» и ждёт, что
+# аудиоэлемент заиграл (`playing`, время > 0,25 с) и файл ответил звуком.
+# Платный звук не проверяется: решение владельца по долгу 121 — (б), пароля
+# тест-учётки в GitHub нет. Замер 7.311: 11 из 11 звучат за 29 с; с битым
+# адресом звука (`--break-audio`, каждый ответ хранилища → 404) — 11 из 11
+# красные. Ручной запуск с `control: broken_audio` делает то же на раннере.
+#
 # Двусторонний. Перед живым обходом — контроль `--plant`: тот же обход по
 # местному «сайту», исправный обязан дать зелёный, сломанный (подменённый
 # адрес звука, HTML вместо звука, пустой файл, страница 500, кнопка без
@@ -48,12 +61,13 @@ on:
   workflow_dispatch:
     inputs:
       control:
-        description: "Контроль: none / broken_target (обход идёт на мёртвый адрес — обязан покраснеть)"
+        description: "Контроль: none / broken_target (обход идёт на мёртвый адрес — обязан покраснеть) / broken_audio (нажатие: каждый файл звука подменён на 404 — обязано покраснеть)"
         type: choice
         default: none
         options:
           - none
           - broken_target
+          - broken_audio
 
 permissions:
   contents: read
@@ -89,4 +103,73 @@ jobs:
             npm run check:silent-listen:prod -- --base=http://127.0.0.1:59999 --audio --concurrency=2 --delay-ms=400 --retry-delay-ms=1000 --agents=web,android-app,ios-app
           else
             npm run check:silent-listen:prod -- --audio --concurrency=2 --delay-ms=400 --agents=web,android-app,ios-app
+          fi
+
+  play:
+    name: Нажатие «слушать» — звук пошёл (уроки, медиа, рассказы; /es и /ru)
+    runs-on: ubuntu-latest
+    # Замер 7.311: 11 страниц за 29 с (с паузами 2 с — ≈1 мин); основное
+    # время — установка браузера.
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "22.23.4"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Версия Playwright — ключ кеша браузеров
+        id: pw
+        run: |
+          echo "version=$(node -p "require('playwright-core/package.json').version")" >> "$GITHUB_OUTPUT"
+          echo "image=${ImageOS:-unknown}" >> "$GITHUB_OUTPUT"
+
+      - name: Кеш браузеров Playwright
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/ms-playwright
+          key: ms-playwright-${{ runner.os }}-${{ runner.arch }}-${{ steps.pw.outputs.image }}-${{ steps.pw.outputs.version }}-chromium
+
+      # Три попытки с паузой — тот же приём, что в `prod-smoke.yml` (7.282):
+      # падали не браузеры, а зеркала apt.
+      - name: Install Playwright browsers
+        timeout-minutes: 14
+        run: |
+          set -uo pipefail
+          printf '%s\n' 'Acquire::Retries "3";' 'Acquire::http::Timeout "30";' 'Acquire::https::Timeout "30";' \
+            | sudo tee /etc/apt/apt.conf.d/80-rf-retries > /dev/null
+          for attempt in 1 2 3; do
+            echo "::group::установка браузеров, попытка $attempt из 3"
+            if [ "$attempt" -gt 1 ]; then
+              sudo dpkg --configure -a || true
+              sudo apt-get update || true
+            fi
+            if sudo env "PATH=$PATH" timeout -k 15 180 npx playwright install-deps chromium \
+              && timeout -k 15 180 npx playwright install chromium; then
+              echo "::endgroup::"
+              exit 0
+            fi
+            echo "::endgroup::"
+            echo "::warning title=Установка браузеров::попытка $attempt из 3 не удалась"
+            if [ "$attempt" -lt 3 ]; then sleep 60; fi
+          done
+          echo "::error title=Установка браузеров не удалась::три попытки — звук на живом сайте НЕ проверялся"
+          exit 1
+
+      - name: Позитивный контроль — битый звук на местном сайте обязан дать красный
+        run: npm run check:silent-listen:play:plant
+
+      - name: Нажатие «слушать» на живом сайте
+        env:
+          CONTROL: ${{ inputs.control }}
+        run: |
+          if [ "${CONTROL:-none}" = "broken_audio" ]; then
+            echo "КОНТРОЛЬ broken_audio: каждый ответ хранилища звука подменён на 404 — обязан покраснеть"
+            npm run check:silent-listen:play -- --break-audio --retry-delay-ms=5000
+          else
+            npm run check:silent-listen:play
           fi

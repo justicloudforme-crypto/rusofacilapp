@@ -38,6 +38,8 @@
 //   node scripts/check-silent-listen.mjs --base=https://rusofacilapp.com
 //   node scripts/check-silent-listen.mjs --limit=25             # первые N страниц
 //   node scripts/check-silent-listen.mjs --plant                # контроли, без сети
+//   node scripts/check-silent-listen.mjs --play --base=https://rusofacilapp.com   # нажать «слушать» браузером (7.311, долг 124)
+//   node scripts/check-silent-listen.mjs --play --plant         # контроль нажатия, местный «сайт»
 //   node scripts/check-silent-listen.mjs --base=https://rusofacilapp.com --audio --concurrency=2 --delay-ms=400 --agents=web,android-app,ios-app
 //                                                               # обход по расписанию (долги 119, 121)
 //
@@ -594,6 +596,15 @@ async function runSweepPlant() {
 }
 
 async function main() {
+  // НАЖАТИЕ НАСТОЯЩИМ БРАУЗЕРОМ (7.311, долг 124) — вторая половина недельного
+  // обхода: уроки, медиа, рассказы, `/es` и `/ru`, звук обязан пойти. Модуль
+  // грузится только здесь: первая половина остаётся чистым Node без браузера.
+  if (ARGS.includes("--play")) {
+    const play = await import("./check-silent-listen-play.mjs");
+    if (PLANT) return await play.runPlayPlant();
+    const failed = await play.runPlay({ base: BASE, breakAudio: ARGS.includes("--break-audio"), retryDelayMs: RETRY_DELAY_MS, gapMs: Number(argValue("play-gap-ms") ?? 2000) });
+    return failed ? 1 : 0;
+  }
   if (PLANT) {
     const markup = runPlant();
     const endToEnd = await runSweepPlant();
