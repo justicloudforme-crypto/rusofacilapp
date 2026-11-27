@@ -219,5 +219,16 @@ async function main() {
   }
 }
 
-const isMain = process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
-if (isMain) main().then((c) => process.exit(c), (e) => { console.error(e.message); process.exit(1); });
+// Ничего при импорте — см. src/lib/entry-point.test.ts.
+const isEntryPointHere =
+  process.argv[1] !== undefined && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (isEntryPointHere) {
+  main().then(
+    (code) => process.exit(code),
+    (error) => {
+      console.error(error.message);
+      process.exit(1);
+    },
+  );
+}
