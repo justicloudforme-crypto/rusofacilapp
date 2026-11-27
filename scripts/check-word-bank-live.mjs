@@ -19,6 +19,10 @@
  *
  *   node scripts/check-word-bank-live.mjs                 # https://rusofacilapp.com
  *   node scripts/check-word-bank-live.mjs --base=http://localhost:3000 --api=10
+ *   node scripts/check-word-bank-live.mjs --batch=2     # слова партии 2 (7.314); --batch=all — все
+ *
+ * Контрольное слово «вне банка» выбирается вне ВСЕХ партий, какая бы ни
+ * проверялась.
  *
  * ПОЗИТИВНЫЙ КОНТРОЛЬ — прогон против прода ДО выката партии обязан быть
  * красным (слова ещё идут в MyMemory); так проверка и была принята (7.312).
@@ -32,6 +36,8 @@ const arg = (n, d) => argv.find((a) => a.startsWith(`--${n}=`))?.slice(n.length 
 const BASE = arg("base", "https://rusofacilapp.com").replace(/\/$/, "");
 const API_WORDS = Number(arg("api", "10"));
 const PAUSE_MS = Number(arg("pause", "6000"));
+const BATCH = arg("batch", "1");
+const BATCH_FILES = { 1: "batch-01.json", 2: "batch-02.json" };
 
 export const FREE_STORIES = [
   { id: "cmsxtq13w000cqwnc466c87es", title: "Репка" },
@@ -44,12 +50,19 @@ const LOADING = Object.fromEntries(
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const norm = (w) => w.normalize("NFC").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
 
-export function loadBatch() {
-  const batch = JSON.parse(readFileSync("src/lib/word-bank-batches/batch-01.json", "utf-8"));
-  return new Map(batch.entries.map((e) => [e.word, e.translation]));
+/** Ключ → перевод партии `which` («1», «2», «all»). */
+export function loadBatch(which = "1") {
+  const numbers = which === "all" ? Object.keys(BATCH_FILES) : [which];
+  const map = new Map();
+  for (const n of numbers) {
+    if (!BATCH_FILES[n]) throw new Error(`нет партии ${n}`);
+    const batch = JSON.parse(readFileSync(`src/lib/word-bank-batches/${BATCH_FILES[n]}`, "utf-8"));
+    for (const e of batch.entries) if (!map.has(e.word)) map.set(e.word, e.translation);
+  }
+  return map;
 }
 
-async function checkStory(browser, lang, story, batch, report) {
+async function checkStory(browser, lang, story, batch, report, everyBatch = batch) {
   const context = await browser.newContext({
     // Ширина компьютера, а не телефона — намеренно: на телефонной ширине
     // Chromium прилипший плеер рассказа сам себя сжимает и разжимает,
@@ -97,7 +110,7 @@ async function checkStory(browser, lang, story, batch, report) {
   const seen = new Set();
   const targets = [];
   for (const w of inBatch) if (!seen.has(norm(w))) (seen.add(norm(w)), targets.push({ word: w, kind: "batch" }));
-  const control = words.find((w) => !batch.has(norm(w)) && !prefetched.has(norm(w)) && norm(w).length > 4);
+  const control = words.find((w) => !everyBatch.has(norm(w)) && !prefetched.has(norm(w)) && norm(w).length > 4);
   if (control) targets.push({ word: control, kind: "control" });
 
   for (const t of targets) {
@@ -181,14 +194,16 @@ async function checkApi(batch, report) {
 }
 
 async function main() {
-  const batch = loadBatch();
+  const batch = loadBatch(BATCH);
+  const everyBatch = loadBatch("all");
+  console.error(`партия ${BATCH}: ${batch.size} слов; база ${BASE}`);
   const report = [];
   const { chromium } = await import("playwright");
   const browser = await chromium.launch();
   try {
     for (const lang of ["es", "ru"]) {
       for (const story of FREE_STORIES) {
-        await checkStory(browser, lang, story, batch, report);
+        await checkStory(browser, lang, story, batch, report, everyBatch);
         await sleep(PAUSE_MS);
       }
     }
