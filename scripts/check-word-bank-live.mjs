@@ -20,6 +20,8 @@
  *   node scripts/check-word-bank-live.mjs                 # https://rusofacilapp.com
  *   node scripts/check-word-bank-live.mjs --base=http://localhost:3000 --api=10
  *   node scripts/check-word-bank-live.mjs --batch=2     # слова партии 2 (7.314); --batch=all — все
+ *   node scripts/check-word-bank-live.mjs --stories=<id>,<id>   # другие рассказы (у платных гостю
+ *                                                               # виден начальный кусок текста)
  *
  * Контрольное слово «вне банка» выбирается вне ВСЕХ партий, какая бы ни
  * проверялась.
@@ -38,6 +40,7 @@ const API_WORDS = Number(arg("api", "10"));
 const PAUSE_MS = Number(arg("pause", "6000"));
 const BATCH = arg("batch", "1");
 const BATCH_FILES = { 1: "batch-01.json", 2: "batch-02.json" };
+const STORIES_ARG = arg("stories", "");
 
 export const FREE_STORIES = [
   { id: "cmsxtq13w000cqwnc466c87es", title: "Репка" },
@@ -202,7 +205,8 @@ async function main() {
   const browser = await chromium.launch();
   try {
     for (const lang of ["es", "ru"]) {
-      for (const story of FREE_STORIES) {
+      const stories = STORIES_ARG ? STORIES_ARG.split(",").map((id) => ({ id, title: id.slice(-6) })) : FREE_STORIES;
+      for (const story of stories) {
         await checkStory(browser, lang, story, batch, report, everyBatch);
         await sleep(PAUSE_MS);
       }
