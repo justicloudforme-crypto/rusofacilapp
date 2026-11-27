@@ -45663,7 +45663,7 @@
         "REPETICIÓN CONTADA: cuando se especifica un número exacto de repeticiones y cada una se completó, se puede usar el perfectivo: 'Я три раза прочитал эту статью' (leí este artículo tres veces, cada vez hasta el final) — distinto del hábito sin cuenta, que usa imperfectivo: 'Я читал эту статью несколько раз' (simplemente el hecho de haberla leído varias veces).",
         "Contraste clásico revisitado con el nuevo vocabulario técnico: 'Кто открывал окно?' (general-fáctico, imperfectivo: solo interesa el hecho, quizá ya está cerrada de nuevo) frente a 'Кто открыл окно?' (resultado, perfectivo: está abierta ahora).",
         "Resumen de los cuatro usos del pasado vistos hasta ahora: proceso/hábito sin cuenta (imperfectivo), general-fáctico/experiencial (imperfectivo), secuencia narrativa (perfectivo) y repetición contada (perfectivo) — todos giran en torno a la misma pregunta de a2-1: ¿interesa el proceso/hecho, o el resultado?",
-        "Comparación con el español: el pretérito imperfecto y el indefinido distinguen algo parecido a proceso/resultado, pero el español no tiene un equivalente directo para los pares supletivos (son simplemente 'sinónimos' en español: tomar/coger) ni marca gramaticalmente la diferencia entre repetición contada y repetición habitual — en ruso, esa diferencia cambia el aspecto del verbo."
+        "Comparación con el español: el pretérito imperfecto y el indefinido distinguen algo parecido a proceso/resultado, pero el español no tiene un equivalente directo para los pares supletivos (son simplemente 'sinónimos' en español: tomar/agarrar) ni marca gramaticalmente la diferencia entre repetición contada y repetición habitual — en ruso, esa diferencia cambia el aspecto del verbo."
       ],
       "examples": [
         {
@@ -45704,7 +45704,7 @@
       {
         "word": "брать / взять",
         "transcription": "brat' / vzyat'",
-        "translation": "tomar, coger"
+        "translation": "tomar, agarrar"
       },
       {
         "word": "класть / положить",
@@ -45714,7 +45714,7 @@
       {
         "word": "ловить / поймать",
         "transcription": "lavít' / paymát'",
-        "translation": "atrapar, coger (al vuelo)"
+        "translation": "atrapar, cachar (al vuelo)"
       },
       {
         "word": "встать / вставать",
@@ -46037,7 +46037,7 @@
         "pairs": [
           {
             "left": "брать / взять",
-            "right": "tomar, coger"
+            "right": "tomar, agarrar"
           },
           {
             "left": "класть / положить",
@@ -46045,7 +46045,7 @@
           },
           {
             "left": "ловить / поймать",
-            "right": "atrapar, coger (al vuelo)"
+            "right": "atrapar, cachar (al vuelo)"
           },
           {
             "left": "вставать / встать",
@@ -57730,7 +57730,7 @@
         "Hoy completas la escala con «поскольку» — la opción MÁS formal de las tres, propia de textos científicos, ensayos y argumentación académica, equivalente a 'dado que' o 'puesto que'. La escala completa de formalidad: потому что (coloquial/neutro) → так как (algo formal) → поскольку (muy formal) — un repaso ampliado de la escala de registro que ya viste en b2-11, ahora aplicada a los conectores causales.",
         "Todas exigen coma antes de la conjunción cuando van en medio de la frase: «Я остался дома, потому что было холодно». Cuando «так как»/«поскольку» ENCABEZAN la oración, la coma va antes de la CONSECUENCIA, no justo después de la conjunción: «Так как было холодно, я остался дома».",
         "«Поскольку» es la opción preferida en textos científicos y argumentación formal — un adelanto de construcciones aún más formales que verás en profundidad en b2-16: «в связи с тем что» (debido a que), «из-за того что» (a causa de que, negativo), «благодаря тому что» (gracias a que, positivo).",
-        "En el habla oral, «ведь» funciona como un conector causal muy informal, casi como un recordatorio implícito de algo que el oyente ya debería saber: «Не бери зонт, ведь дождя не будет» (No cojas el paraguas, si no va a llover) — un matiz causal específico, distinto de su uso general como partícula de énfasis que ya viste en b2-5.",
+        "En el habla oral, «ведь» funciona como un conector causal muy informal, casi como un recordatorio implícito de algo que el oyente ya debería saber: «Не бери зонт, ведь дождя не будет» (No te lleves el paraguas, si no va a llover) — un matiz causal específico, distinto de su uso general como partícula de énfasis que ya viste en b2-5.",
         "Vocabulario clave para analizar un razonamiento: причина (causa), следствие (consecuencia), вывод (conclusión), предварительный (preliminar) — útiles tanto para comentar un texto argumentativo como para estructurar el tuyo propio."
       ],
       "examples": [
@@ -57756,7 +57756,7 @@
         },
         {
           "russian": "Не бери зонт, ведь дождя не будет.",
-          "translation": "No cojas el paraguas, si no va a llover."
+          "translation": "No te lleves el paraguas, si no va a llover."
         }
       ]
     },
@@ -57916,7 +57916,7 @@
         "audioExamples": [
           {
             "text": "Не бери зонт, ведь дождя не будет.",
-            "caption": "No cojas el paraguas, si no va a llover."
+            "caption": "No te lleves el paraguas, si no va a llover."
           }
         ]
       },
@@ -58271,7 +58271,7 @@
         },
         {
           "text": "Не бери зонт, ведь дождя не будет.",
-          "translation": "No cojas el paraguas, si no va a llover."
+          "translation": "No te lleves el paraguas, si no va a llover."
         }
       ]
     }
