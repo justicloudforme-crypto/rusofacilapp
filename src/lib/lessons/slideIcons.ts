@@ -7009,7 +7009,7 @@ export const slideIllustrations: Record<SlideIconKey, IllustrationShape[]> = {
   // Español: imperfecto/indefinido no marcan pares supletivos ni repetición contada como el ruso.
   spanishPastAspectNuanceCompare: [
     { kind: "rect", x: 10, y: 20, w: 62, h: 50, rx: 10, fill: "muted" },
-    { kind: "text", x: 41, y: 42, size: 6, fill: "inkSoft", content: "tomar / coger", anchor: "middle" },
+    { kind: "text", x: 41, y: 42, size: 6, fill: "inkSoft", content: "tomar / agarrar", anchor: "middle" },
     { kind: "text", x: 41, y: 56, size: 6, fill: "inkSoft", content: "leí tres veces", anchor: "middle" },
     { kind: "text", x: 41, y: 68, size: 5.5, fill: "danger", content: "sin marca aspectual (ES)", anchor: "middle" },
     { kind: "rect", x: 88, y: 20, w: 62, h: 50, rx: 10, fill: "brand" },
