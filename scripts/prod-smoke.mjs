@@ -121,6 +121,11 @@ const WORD_BANK_PROBE_TOKEN = '"source":"lesson"';
  *  признак сличает и перевод, и источник (у MyMemory источник «mymemory»). */
 const WORD_BANK_PROBE_2 = "мораль";
 const WORD_BANK_PROBE_2_TOKEN = '"translation":"moraleja","source":"lesson"';
+/** Слово третьей партии (список 7.315, утверждён владельцем 27.11.2026, заход 7.316,
+ *  `batch-03.json`): «старуха» — строка с поправкой владельца («anciana» первой), поэтому
+ *  проба заодно видит, что на проде именно поправленный перевод, а не исходное предложение. */
+const WORD_BANK_PROBE_3 = "старуха";
+const WORD_BANK_PROBE_3_TOKEN = '"translation":"anciana, vieja","source":"lesson"';
 
 function dictionary(lang) {
   return JSON.parse(readFileSync(`src/dictionaries/${lang}.json`, "utf-8"));
@@ -163,6 +168,12 @@ export function targets() {
       name: "перевод слова из партии 2 своего банка",
       path: `/api/dictionary/translate?word=${encodeURIComponent(WORD_BANK_PROBE_2)}`,
       json: { contains: WORD_BANK_PROBE_2_TOKEN, status: 200 },
+    },
+    // Долг 171 (7.316): слово третьей партии — перевод с поправкой владельца из банка.
+    {
+      name: "перевод слова из партии 3 своего банка",
+      path: `/api/dictionary/translate?word=${encodeURIComponent(WORD_BANK_PROBE_3)}`,
+      json: { contains: WORD_BANK_PROBE_3_TOKEN, status: 200 },
     },
   ];
 }

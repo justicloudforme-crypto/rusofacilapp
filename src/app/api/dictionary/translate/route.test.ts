@@ -114,11 +114,14 @@ describe("GET /api/dictionary/translate — свой банк перед чуж�
   });
 });
 
+// Слово-проба — вне своего банка: «навстречу» владелец отложил (7.316) и сторож
+// партии 3 держит его вне всех партий. До 7.316 здесь было «старик» — оно
+// вошло в партию 3 и теперь отвечает банком, не доходя до MyMemory.
 describe("GET /api/dictionary/translate — отказ чужого сервиса не виден ученику (долг 168)", () => {
   it("ПОЗИТИВНЫЙ КОНТРОЛЬ: подсаженный «MYMEMORY WARNING…» опознан отказом", async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => QUOTA_REFUSAL_BODY });
 
-    const res = await GET(fakeRequest("старик"));
+    const res = await GET(fakeRequest("навстречу"));
     const body = await res.json();
 
     expect(res.status).toBe(502);
@@ -129,17 +132,17 @@ describe("GET /api/dictionary/translate — отказ чужого сервис
   it("ОТРИЦАТЕЛЬНЫЙ КОНТРОЛЬ: настоящий перевод проходит", async () => {
     fetchMock.mockResolvedValue({
       ok: true,
-      json: async () => ({ responseStatus: 200, quotaFinished: false, matches: [{ translation: "viejo", match: 1 }] }),
+      json: async () => ({ responseStatus: 200, quotaFinished: false, matches: [{ translation: "al encuentro", match: 1 }] }),
     });
 
-    const res = await GET(fakeRequest("старик"));
+    const res = await GET(fakeRequest("навстречу"));
     expect(res.status).toBe(200);
-    expect((await res.json()).translation).toBe("viejo");
+    expect((await res.json()).translation).toBe("al encuentro");
   });
 
   it("отказ не запирается в кэше: no-store", async () => {
     fetchMock.mockResolvedValue({ ok: true, json: async () => QUOTA_REFUSAL_BODY });
-    const res = await GET(fakeRequest("старик"));
+    const res = await GET(fakeRequest("навстречу"));
     expect(res.headers.get("Cache-Control")).toBe("no-store");
   });
 

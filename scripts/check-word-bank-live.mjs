@@ -19,7 +19,7 @@
  *
  *   node scripts/check-word-bank-live.mjs                 # https://rusofacilapp.com
  *   node scripts/check-word-bank-live.mjs --base=http://localhost:3000 --api=10
- *   node scripts/check-word-bank-live.mjs --batch=2     # слова партии 2 (7.314); --batch=all — все
+ *   node scripts/check-word-bank-live.mjs --batch=2     # слова партии 2 (7.314), --batch=3 — партии 3 (7.316); --batch=all — все
  *   node scripts/check-word-bank-live.mjs --stories=<id>,<id>   # другие рассказы (у платных гостю
  *                                                               # виден начальный кусок текста)
  *
@@ -39,7 +39,7 @@ const BASE = arg("base", "https://rusofacilapp.com").replace(/\/$/, "");
 const API_WORDS = Number(arg("api", "10"));
 const PAUSE_MS = Number(arg("pause", "6000"));
 const BATCH = arg("batch", "1");
-const BATCH_FILES = { 1: "batch-01.json", 2: "batch-02.json" };
+const BATCH_FILES = { 1: "batch-01.json", 2: "batch-02.json", 3: "batch-03.json" };
 const STORIES_ARG = arg("stories", "");
 
 export const FREE_STORIES = [

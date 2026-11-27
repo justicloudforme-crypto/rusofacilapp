@@ -99,6 +99,12 @@ describe("партии своего банка переводов (долг 171)
     expect(row, `проба партии 2 «${probe2}» не из партии 2`).toBeTruthy();
     expect(lookupBatchKey(probe2 as string)).toBe(row!.translation);
     expect(token2).toBe(`"translation":${JSON.stringify(row!.translation)},"source":"lesson"`);
+    const probe3 = /const WORD_BANK_PROBE_3 = "([^"]+)"/.exec(smoke)?.[1];
+    const token3 = /const WORD_BANK_PROBE_3_TOKEN = '([^']+)'/.exec(smoke)?.[1];
+    const row3 = WORD_BANK_BATCHES.find((b) => b.batch === 3)!.entries.find((e) => e.word === probe3);
+    expect(row3, `проба партии 3 «${probe3}» не из партии 3`).toBeTruthy();
+    expect(lookupBatchKey(probe3 as string)).toBe(row3!.translation);
+    expect(token3).toBe(`"translation":${JSON.stringify(row3!.translation)},"source":"lesson"`);
   });
 });
 
@@ -119,8 +125,8 @@ const OWNER_CORRECTIONS: Record<number, string> = {
   54: "compañía, empresa", // «компании»: и фирма, и компания людей
 };
 
-function proposalTables(): { accepted: { n: number; word: string; translation: string; source: string; uses: number }[]; deferred: string[] } {
-  const doc = readFileSync("docs/word-bank-batch-02-proposal.md", "utf-8");
+function proposalTables(path = "docs/word-bank-batch-02-proposal.md"): { accepted: { n: number; word: string; translation: string; source: string; uses: number }[]; deferred: string[] } {
+  const doc = readFileSync(path, "utf-8");
   const accepted: { n: number; word: string; translation: string; source: string; uses: number }[] = [];
   const deferred: string[] = [];
   let section: "acc" | "def" | null = null;
@@ -184,5 +190,87 @@ describe("партия 2 своего банка = список, утвержд�
     expect(deferred.filter((w) => keys.has(w))).toEqual([]);
     expect(deferred.every((w) => lookupBatchKey(w) === null)).toBe(true);
     expect(batch.rejected.map((r) => r.word).sort()).toEqual([...deferred].sort());
+  });
+});
+
+/**
+ * ПАРТИЯ 3 = УТВЕРЖДЁННЫЙ ВЛАДЕЛЬЦЕМ СПИСОК — сторож долга 171 (заход 7.316).
+ *
+ * Список составил заход 7.315 (`docs/word-bank-batch-03-proposal.md`, таблица
+ * «Итог» — 150 строк, «Отложено» — 21). Владелец 27.11.2026 утвердил его с
+ * решениями по 15 спорным словам: десять поправок перевода (ниже, дословно из
+ * решения, по номеру строки «Итога»); «берёт», «знает», «любит», «ради»,
+ * «рыбка», «оказывается» — как предложено; «навстречу» — не записывать, к
+ * отложенным (в «Итог» оно и не входило, поэтому записаны все 150 строк).
+ * Тест читает таблицы документа, накладывает поправки и требует совпадения
+ * файла партии знак в знак — как у партии 2.
+ */
+const OWNER_CORRECTIONS_3: Record<number, string> = {
+  20: "patio", // дворе
+  62: "más fuerte; más", // сильнее
+  63: "anciana, vieja", // старуха — anciana первой
+  69: "se sienta; se sube", // садится
+  70: "sabía, conocía", // знал — оба глагола
+  102: "sabía, conocía", // знала — оба глагола
+  108: "final", // конце
+  116: "niños, hijos", // детей — оба
+  122: "fuerte; profundamente", // крепко
+  144: "lado, parte", // стороны
+};
+/** Решение владельца 27.11.2026: не записывать, перенести к отложенным. */
+const OWNER_DEFERRED_3 = ["навстречу"];
+
+describe("партия 3 своего банка = список, утверждённый владельцем 27.11.2026 (долг 171)", () => {
+  const batch = WORD_BANK_BATCHES.find((b) => b.batch === 3)!;
+  const { accepted, deferred } = proposalTables("docs/word-bank-batch-03-proposal.md");
+
+  it("документ разобран целиком: 150 принятых, 21 отложенное (пустой разбор — красный)", () => {
+    expect(batch, "партии 3 нет в WORD_BANK_BATCHES").toBeTruthy();
+    expect(accepted.length).toBe(150);
+    expect(deferred.length).toBe(21);
+    expect(batch.rule).toBe("owner-approved");
+    expect(batch.approval?.list).toBe("docs/word-bank-batch-03-proposal.md");
+    expect(batch.approval?.date).toBe("2026-11-27");
+    expect(batch.approval?.corrections).toEqual(Object.fromEntries(Object.entries(OWNER_CORRECTIONS_3)));
+  });
+
+  it("каждое слово, перевод и порядок — как в утверждённом списке с поправками владельца", () => {
+    const expected = accepted
+      .filter((r) => !OWNER_DEFERRED_3.includes(r.word))
+      .map((r) => ({ n: r.n, word: r.word, translation: OWNER_CORRECTIONS_3[r.n] ?? r.translation, storyUses: r.uses }));
+    const actual = batch.entries.map((e) => ({ n: e.n, word: e.word, translation: e.translation, storyUses: e.storyUses }));
+    expect(actual).toEqual(expected);
+  });
+
+  it("у каждого слова назван источник и отметка утверждения владельца", () => {
+    const bad: string[] = [];
+    for (const entry of batch.entries) {
+      const row = accepted.find((r) => r.n === entry.n)!;
+      const src = entry.source ?? "";
+      if (!/владельц[а-я]* 27\.11\.2026/.test(src)) bad.push(`${entry.word}: нет отметки владельца`);
+      if (OWNER_CORRECTIONS_3[entry.n!] !== undefined && !src.includes("поправка владельца")) bad.push(`${entry.word}: поправка владельца не названа`);
+      if (row.source === "перевод предложен агентом") {
+        if (!src.startsWith("перевод предложен агентом") && !src.startsWith("перевод — поправка владельца")) bad.push(`${entry.word}: источник «агент» потерян`);
+      } else {
+        const base = row.source.replace("форма — агент", "форма предложена агентом");
+        if (!src.startsWith(base)) bad.push(`${entry.word}: источник «${src}» ≠ списку «${row.source}»`);
+      }
+      for (const slug of src.match(/урок ([abc][12]-\d+)/g) ?? []) {
+        if (!LESSONS[slug.slice(5)]) bad.push(`${entry.word}: урока ${slug} нет в content.json`);
+      }
+    }
+    expect(bad).toEqual([]);
+  });
+
+  it("21 отложенное слово списка и «навстречу» не попали ни в одну партию", () => {
+    const keys = new Set(all.map((e) => e.word));
+    const off = [...deferred, ...OWNER_DEFERRED_3];
+    expect(off.filter((w) => keys.has(w))).toEqual([]);
+    expect(off.every((w) => lookupBatchKey(w) === null)).toBe(true);
+    expect(batch.rejected.map((r) => r.word).sort()).toEqual([...off].sort());
+  });
+
+  it("«coger» нет ни в одном переводе партий (в Мексике — грубое слово)", () => {
+    expect(all.filter((e) => /\bcoger\b|\bcog[eií]/i.test(e.translation)).map((e) => e.word)).toEqual([]);
   });
 });

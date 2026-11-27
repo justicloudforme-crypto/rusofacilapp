@@ -1,6 +1,7 @@
 import { bankKey } from "../translation-normalize";
 import batch01 from "./batch-01.json";
 import batch02 from "./batch-02.json";
+import batch03 from "./batch-03.json";
 
 /**
  * ПАРТИИ СВОЕГО БАНКА ПЕРЕВОДОВ, которые живут в коде, а не в базе
@@ -27,7 +28,8 @@ import batch02 from "./batch-02.json";
  *     утвердил построчно (`approval.list`, с его поправками
  *     `approval.corrections`); у каждого слова в `source` — урок/карточка
  *     или «предложен агентом, утверждён владельцем». Тест сличает перевод с
- *     утверждённым списком знак в знак.
+ *     утверждённым списком знак в знак. Партия 3 (7.316) — то же правило:
+ *     список 7.315, утверждённый владельцем 27.11.2026 с десятью поправками.
  * Выдуманный или «поправленный» перевод в обоих случаях роняет `npm run test`.
  *
  * ФОРМЫ СЛОВА. Банк сличает словоформу как она напечатана (правило
@@ -60,7 +62,7 @@ export interface Batch {
   rejected: { word: string; count: number; reason: string }[];
 }
 
-export const WORD_BANK_BATCHES: readonly Batch[] = [batch01 as Batch, batch02 as Batch];
+export const WORD_BANK_BATCHES: readonly Batch[] = [batch01 as Batch, batch02 as Batch, batch03 as Batch];
 
 /** Ключ → перевод по всем партиям. Первая партия, назвавшая ключ, выигрывает. */
 const BATCH_MAP: ReadonlyMap<string, string> = (() => {
