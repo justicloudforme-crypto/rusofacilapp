@@ -83,10 +83,12 @@ describe("GET /api/dictionary/bank — словарь видимого абза�
   });
 
   it("предзагрузка отдаёт и слова партии банка (долг 171) — без базы и без запросов наружу", async () => {
-    const body = await (await GET(fakeRequest("ему,вдруг,показывает"))).json();
+    // «мораль» — партия 2 (утверждена владельцем, 7.314); «может» — отложено
+    // владельцем как многозначное и в банк не входит.
+    const body = await (await GET(fakeRequest("ему,вдруг,мораль,может"))).json();
 
     expect(fetchMock).toHaveBeenCalledTimes(0);
-    expect(body.translations).toEqual({ ему: "a él", вдруг: "de repente" });
-    expect(body.found).toBe(2);
+    expect(body.translations).toEqual({ ему: "a él", вдруг: "de repente", мораль: "moraleja" });
+    expect(body.found).toBe(3);
   });
 });
