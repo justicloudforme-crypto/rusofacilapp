@@ -1,5 +1,6 @@
 import { bankKey } from "../translation-normalize";
 import batch01 from "./batch-01.json";
+import batch02 from "./batch-02.json";
 
 /**
  * ПАРТИИ СВОЕГО БАНКА ПЕРЕВОДОВ, которые живут в коде, а не в базе
@@ -17,10 +18,17 @@ import batch01 from "./batch-01.json";
  *   · отвечает БЕЗ чтения базы — и продолжает отвечать, когда база лежит;
  *   · ничего не стирает и не перезаписывает в боевых данных.
  *
- * ОТКУДА ПЕРЕВОДЫ. Только из словарей уроков (`src/lib/lessons/content.json`
- * → `vocabulary`), где та же словоформа стоит отдельной строкой; урок
- * записан у каждого слова в `from`. Тест сличает перевод с уроком знак в
- * знак — выдуманный или «поправленный» перевод роняет `npm run test`.
+ * ОТКУДА ПЕРЕВОДЫ — по правилу партии (`rule`):
+ *   · «lesson-verbatim» (партия 1, 7.312) — только из словарей уроков
+ *     (`src/lib/lessons/content.json` → `vocabulary`), где та же словоформа
+ *     стоит отдельной строкой; урок записан у каждого слова в `from`. Тест
+ *     сличает перевод с уроком знак в знак.
+ *   · «owner-approved» (партия 2, 7.314) — список, который владелец
+ *     утвердил построчно (`approval.list`, с его поправками
+ *     `approval.corrections`); у каждого слова в `source` — урок/карточка
+ *     или «предложен агентом, утверждён владельцем». Тест сличает перевод с
+ *     утверждённым списком знак в знак.
+ * Выдуманный или «поправленный» перевод в обоих случаях роняет `npm run test`.
  *
  * ФОРМЫ СЛОВА. Банк сличает словоформу как она напечатана (правило
  * `bankKey`: регистр, ударение, невидимые знаки — и ничего больше). Каждая
@@ -34,18 +42,25 @@ import batch01 from "./batch-01.json";
 export interface BatchEntry {
   word: string;
   translation: string;
-  from: string[];
+  /** «lesson-verbatim»: уроки, из словаря которых взят перевод. */
+  from?: string[];
+  /** «owner-approved»: номер строки утверждённого списка и источник перевода. */
+  n?: number;
+  source?: string;
   storyUses: number;
 }
 
 export interface Batch {
   batch: number;
   run: string;
+  /** Нет поля — партия 1, правило «lesson-verbatim». */
+  rule?: "lesson-verbatim" | "owner-approved";
+  approval?: { by: string; date: string; list: string; corrections: Record<string, string> };
   entries: BatchEntry[];
   rejected: { word: string; count: number; reason: string }[];
 }
 
-export const WORD_BANK_BATCHES: readonly Batch[] = [batch01 as Batch];
+export const WORD_BANK_BATCHES: readonly Batch[] = [batch01 as Batch, batch02 as Batch];
 
 /** Ключ → перевод по всем партиям. Первая партия, назвавшая ключ, выигрывает. */
 const BATCH_MAP: ReadonlyMap<string, string> = (() => {

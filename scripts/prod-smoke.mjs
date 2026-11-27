@@ -116,6 +116,11 @@ const SMOKE_USER_AGENT = "RFProdSmoke";
  *  `src/lib/word-bank-batches/batch-01.json`) и признак ответа из банка. */
 const WORD_BANK_PROBE = "почти";
 const WORD_BANK_PROBE_TOKEN = '"source":"lesson"';
+/** Слово второй партии (список, утверждённый владельцем 26.11.2026, заход 7.314,
+ *  `batch-02.json`): «мораль» обязана прийти из банка ровно утверждённым переводом —
+ *  признак сличает и перевод, и источник (у MyMemory источник «mymemory»). */
+const WORD_BANK_PROBE_2 = "мораль";
+const WORD_BANK_PROBE_2_TOKEN = '"translation":"moraleja","source":"lesson"';
 
 function dictionary(lang) {
   return JSON.parse(readFileSync(`src/dictionaries/${lang}.json`, "utf-8"));
@@ -152,6 +157,12 @@ export function targets() {
       name: "перевод слова из партии своего банка",
       path: `/api/dictionary/translate?word=${encodeURIComponent(WORD_BANK_PROBE)}`,
       json: { contains: WORD_BANK_PROBE_TOKEN, status: 200 },
+    },
+    // Долг 171 (7.314): слово второй партии — утверждённый владельцем перевод из банка.
+    {
+      name: "перевод слова из партии 2 своего банка",
+      path: `/api/dictionary/translate?word=${encodeURIComponent(WORD_BANK_PROBE_2)}`,
+      json: { contains: WORD_BANK_PROBE_2_TOKEN, status: 200 },
     },
   ];
 }
