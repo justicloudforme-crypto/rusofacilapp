@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { lookupWordBankOne } from "@/lib/word-bank";
 import { pickMyMemoryTranslation, type MyMemoryPayload } from "@/lib/mymemory-refusal";
 import { TRANSLATION_CACHE_CONTROL, TRANSLATION_ERROR_CACHE_CONTROL } from "@/lib/translation-cache";
+import { replaceCoger } from "@/lib/no-coger-filter";
 
 /**
  * Перевод ОДНОГО слова для карточки тапа в рассказе.
@@ -67,7 +68,11 @@ export async function GET(request: NextRequest) {
     }
 
     const data: MyMemoryPayload = await res.json();
-    const translation = pickMyMemoryTranslation(data);
+    // «coger» в Мексике грубое слово (решение владельца 27.11.2026, 7.320):
+    // чужой ответ отдаётся только после замены на «agarrar». Копии, легшие
+    // в кеши до этого, чистит карточка на показе (`StoryText`).
+    const picked = pickMyMemoryTranslation(data);
+    const translation = picked ? replaceCoger(picked, { russian: word }) : picked;
     if (!translation) {
       // Сюда попадают ОБА случая, и различать их для ученика незачем:
       // «сервис отказал» (квота, 429, предупреждение вместо перевода) и

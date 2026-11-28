@@ -182,3 +182,31 @@ describe("GET /api/dictionary/translate — отказ чужого сервис
     expect(body).toMatchObject({ translation: "a él (dativo)", source: "flashcard" });
   });
 });
+
+describe("GET /api/dictionary/translate — «coger» из MyMemory не доходит до ученика (7.320)", () => {
+  it.each([
+    ["взяла", "cogió", "agarró"],
+    ["возьму", "Lo cojo.", "Lo agarro."],
+    ["возьми", "Coge", "Agarra"],
+    ["беру", "Lo cojo.", "Lo agarro."],
+  ])("%s: MyMemory «%s» → ученик видит «%s»", async (word, upstream, shown) => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ responseStatus: 200, responseData: { translatedText: upstream }, matches: [{ translation: upstream, match: 1 }] }),
+    });
+    const res = await GET(fakeRequest(word));
+    const body = await res.json();
+    expect(res.status).toBe(200);
+    expect(body.translation).toBe(shown);
+    expect(body.source).toBe("mymemory");
+  });
+
+  it("recoger из MyMemory остаётся как есть", async () => {
+    fetchMock.mockResolvedValue({
+      ok: true,
+      json: async () => ({ responseStatus: 200, responseData: { translatedText: "recoger" }, matches: [{ translation: "recoger", match: 1 }] }),
+    });
+    const body = await (await GET(fakeRequest("собрать"))).json();
+    expect(body.translation).toBe("recoger");
+  });
+});

@@ -18,6 +18,7 @@ import { buildStoryQueue, type StoryAudioSegment } from "@/lib/stories";
 import { isHomograph } from "@/lib/story-word-pick";
 import { askWordAudio, preloadWordClip, wordAudioKey } from "@/lib/word-audio-answers";
 import { cacheTranslation, cacheTranslations, readCachedTranslation, unknownWords } from "@/lib/translation-store";
+import { replaceCoger } from "@/lib/no-coger-filter";
 import {
   clearNativeMediaSession,
   nativeArtworkSrc,
@@ -1308,7 +1309,10 @@ export default function StoryText({
     // Номер тапа: ответ, приехавший для ПРЕЖНЕГО слова (человек закрыл
     // карточку и тапнул другое, пока сеть думала), сюда не пишется.
     const tap = ++tapGenRef.current;
-    const cached = readCachedTranslation(word);
+    // «coger» → «agarrar» НА ПОКАЗЕ (7.320): память вкладки могла запомнить
+    // ответ, полученный до фильтра на сервере.
+    const remembered = readCachedTranslation(word);
+    const cached = remembered ? replaceCoger(remembered, { russian: word }) : null;
     setTranslation(cached ? { status: "done", translation: cached } : { status: "loading" });
     setWordAudio({ status: "loading" });
     // Озвучка и перевод спрашиваются НЕЗАВИСИМО: перевод ходит во внешний
@@ -1381,8 +1385,11 @@ export default function StoryText({
         setTranslation({ status: "error" });
         return;
       }
-      setTranslation({ status: "done", translation: data.translation });
-      cacheTranslation(word, data.translation);
+      // На показе, а не только на сервере (7.320): ответ мог прийти из
+      // недельной копии грани Vercel, браузера или кеша воркера `apis`.
+      const shown = replaceCoger(data.translation, { russian: word });
+      setTranslation({ status: "done", translation: shown });
+      cacheTranslation(word, shown);
     } catch {
       // Долг 360. Сюда попадает только ОТКАЗ САМОГО ЗАПРОСА: ответ сервера,
       // даже 502, приходит выше, в `!res.ok`, и говорит прежней фразой.
