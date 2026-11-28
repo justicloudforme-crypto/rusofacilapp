@@ -27,6 +27,14 @@
  *     · уроки и экзамены, перекрытые в базе, — Lesson.contentJson,
  *       Exam.contentJson (страница берёт строку базы раньше content.json).
  *   Боевую базу сторож не читает; её сверяет скрипт правки после записи.
+ *   Фильтр ответов внешнего переводчика (решение владельца, вариант (б),
+ *   заход 7.320) — `src/lib/no-coger-filter.ts`:
+ *     · поведение — формы из находки 7.319 («cogió», «Lo cojo.», «Coge»),
+ *       заглавная, энклитики меняются на «agarrar», и после замены сторож
+ *       ничего не находит; recoger, escoger, encogerse, acoger, cojear — как есть;
+ *     · место — `/api/dictionary/translate` пропускает ответ MyMemory через
+ *       `replaceCoger`, и карточка `StoryText` пропускает через него и ответ
+ *       сети, и память вкладки (копии в кешах, легшие до фильтра).
  *
  * ЧЕГО НЕ СМОТРИТ (решение владельца — отдельно): переводы рассказов
  * (`Story.translationEs`, prisma/stories-data.ts) и субтитры медиа
@@ -47,6 +55,7 @@ import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { createClient } from "@libsql/client";
+import { replaceCoger as realReplaceCoger } from "../src/lib/no-coger-filter.ts";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -138,12 +147,54 @@ async function scanDb(dbFile) {
   return { hits, rows };
 }
 
-export async function runCheck({ root = ROOT, dbFile } = {}) {
+// ------------------------------------------- фильтр внешнего переводчика (7.320)
+const FILTER_ROUTE = "src/app/api/dictionary/translate/route.ts";
+const FILTER_READER = "src/components/stories/StoryText.tsx";
+
+/** Должно стать чистым — и стать именно этим. */
+const FILTER_MUST_CHANGE = [
+  ["cogió", "agarró"],
+  ["Lo cojo.", "Lo agarro."],
+  ["Coge", "Agarra"],
+  ["Cogió el libro.", "Agarró el libro."],
+  ["¡Cógelo!", "¡Agárralo!"],
+  ["cogerlo", "agarrarlo"],
+  ["No cojas eso", "No agarres eso"],
+];
+/** Не формы «coger» — остаются байт в байт. */
+const FILTER_MUST_KEEP = ["recoger", "Recoge la mesa.", "escoger", "se encogió", "encogerse", "acoger", "sobrecoger", "cojear", "cojeó", "cognitivo"];
+
+/** Ошибки фильтра: поведение функции и места, где она стоит. */
+export function checkFilter({ replace = realReplaceCoger, root = ROOT } = {}) {
+  const problems = [];
+  for (const [from, to] of FILTER_MUST_CHANGE) {
+    const got = replace(from);
+    if (got !== to) problems.push(`фильтр: «${from}» → «${got}», ждали «${to}»`);
+    else if (findCoger(got).length > 0) problems.push(`фильтр: после замены «${got}» — всё ещё coger`);
+  }
+  for (const keep of FILTER_MUST_KEEP) {
+    const got = replace(keep);
+    if (got !== keep) problems.push(`фильтр: «${keep}» испорчено → «${got}»`);
+  }
+  const route = readFileSync(path.join(root, FILTER_ROUTE), "utf-8");
+  if (!/import\s*\{[^}]*\breplaceCoger\b[^}]*\}\s*from\s*"@\/lib\/no-coger-filter"/.test(route)) problems.push(`${FILTER_ROUTE}: replaceCoger не импортирован`);
+  if (!/replaceCoger\(\s*picked\b/.test(route)) problems.push(`${FILTER_ROUTE}: ответ MyMemory (picked) не проходит через replaceCoger`);
+  if (!/translation\s*=\s*picked\s*\?\s*replaceCoger\(/.test(route)) problems.push(`${FILTER_ROUTE}: наружу уходит не результат replaceCoger`);
+  const reader = readFileSync(path.join(root, FILTER_READER), "utf-8");
+  if (!/import\s*\{[^}]*\breplaceCoger\b[^}]*\}\s*from\s*"@\/lib\/no-coger-filter"/.test(reader)) problems.push(`${FILTER_READER}: replaceCoger не импортирован`);
+  if (!/replaceCoger\(\s*remembered\b/.test(reader)) problems.push(`${FILTER_READER}: память вкладки показывается без replaceCoger`);
+  if (!/replaceCoger\(\s*data\.translation\b/.test(reader)) problems.push(`${FILTER_READER}: ответ сети показывается без replaceCoger`);
+  if (/translation:\s*data\.translation\b/.test(reader)) problems.push(`${FILTER_READER}: в карточку кладётся сырой data.translation`);
+  return problems;
+}
+
+export async function runCheck({ root = ROOT, dbFile, filterRoot = ROOT } = {}) {
   const files = scanFiles(root);
   const defaultDb = path.join(root, "dev.db");
   const target = dbFile ?? (existsSync(defaultDb) ? defaultDb : null);
   const db = target ? await scanDb(target) : null;
-  return { files, db, target, hits: [...files.hits, ...(db?.hits ?? [])] };
+  const filter = checkFilter({ root: filterRoot });
+  return { files, db, target, filter, hits: [...files.hits, ...(db?.hits ?? [])] };
 }
 
 function report(result) {
@@ -151,6 +202,8 @@ function report(result) {
   if (result.db) console.log(`база ${path.relative(process.cwd(), result.target) || result.target}: ${Object.entries(result.db.rows).map(([k, n]) => `${k} ${n}`).join(", ")}`);
   else console.log("база: dev.db нет — проверены только файлы");
   for (const h of result.hits) console.log(`  «${h.form}» — ${h.kind}: ${h.where}\n      ${h.text.slice(0, 160)}`);
+  console.log(`фильтр переводчика: ${result.filter.length === 0 ? `зелёный (${FILTER_MUST_CHANGE.length} замен, ${FILTER_MUST_KEEP.length} не-форм, адрес и карточка)` : "КРАСНЫЙ"}`);
+  for (const p of result.filter) console.log(`  ${p}`);
 }
 
 // ---------------------------------------------------------------- подмены
@@ -238,6 +291,41 @@ const DB_PLANTS = [
   ["база: экзамен в базе «cogí»", `INSERT INTO "Exam" VALUES ('x','b1','b1-exam-2','{"right":"cogí"}')`],
 ];
 
+/** Подмены фильтра: функция-пустышка, кривая замена, снятый вызов в адресе и в карточке. */
+const FILTER_PLANTS = [
+  ["фильтр отключён (возвращает текст как есть)", { replace: (t) => t }],
+  ["фильтр съедает recoger", { replace: (t) => realReplaceCoger(t).replace(/recoger/g, "reagarrar") }],
+  ["фильтр теряет заглавную", { replace: (t) => realReplaceCoger(t).toLowerCase() }],
+  ["адрес перевода отдаёт MyMemory без фильтра", { file: FILTER_ROUTE, from: /picked \? replaceCoger\(picked, \{ russian: word \}\) : picked/, to: "picked" }],
+  ["карточка показывает память вкладки без фильтра", { file: FILTER_READER, from: /replaceCoger\(remembered, \{ russian: word \}\)/, to: "remembered" }],
+  ["карточка показывает ответ сети без фильтра", { file: FILTER_READER, from: /const shown = replaceCoger\(data\.translation, \{ russian: word \}\);/, to: "const shown = data.translation;" }],
+];
+
+function plantFilter(dir) {
+  let failed = 0;
+  const base = checkFilter({ root: ROOT });
+  if (base.length !== 0) { console.log(`ОТКАЗ: фильтр уже красный без подмен — ${base.join("; ")}`); return FILTER_PLANTS.length; }
+  for (const [name, p] of FILTER_PLANTS) {
+    let problems;
+    if (p.replace) problems = checkFilter({ replace: p.replace, root: ROOT });
+    else {
+      for (const rel of [FILTER_ROUTE, FILTER_READER]) {
+        mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+        cpSync(path.join(ROOT, rel), path.join(dir, rel));
+      }
+      const file = path.join(dir, p.file);
+      const src = readFileSync(file, "utf-8");
+      if (!p.from.test(src)) throw new Error(`подмена не легла: в ${p.file} нет ${p.from}`);
+      writeFileSync(file, src.replace(p.from, p.to));
+      problems = checkFilter({ root: dir });
+    }
+    const ok = problems.length > 0;
+    if (!ok) failed++;
+    console.log(`${ok ? "красный, как надо" : "ПРОПУЩЕНО"} — ${name}${ok ? ` (${problems[0]})` : ""}`);
+  }
+  return failed;
+}
+
 async function plant() {
   const dir = mkdtempSync(path.join(os.tmpdir(), "no-coger-"));
   let failed = 0;
@@ -263,10 +351,11 @@ async function plant() {
       if (!ok) failed++;
       console.log(`${ok ? "красный, как надо" : "ПРОПУЩЕНО"} — ${name}${ok ? ` («${r.hits[0].form}»)` : ""}`);
     }
+    failed += plantFilter(dir);
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }
-  const total = PLANTS.length + DB_PLANTS.length;
+  const total = PLANTS.length + DB_PLANTS.length + FILTER_PLANTS.length;
   console.log(`подмен красных: ${total - failed} из ${total}`);
   return failed === 0 ? 0 : 1;
 }
@@ -276,6 +365,10 @@ async function main() {
   const dbArg = process.argv.find((a) => a.startsWith("--db="))?.slice(5);
   const result = await runCheck({ dbFile: dbArg ? path.resolve(dbArg) : undefined });
   report(result);
+  if (result.filter.length > 0) {
+    console.log(`\nФИЛЬТР ВНЕШНЕГО ПЕРЕВОДЧИКА СЛОМАН: ${result.filter.length}. Ученик увидит «coger» из MyMemory (решение владельца 27.11.2026, вариант (б), 7.320).`);
+    return 1;
+  }
   if (result.hits.length > 0) {
     console.log(`\nНАЙДЕНО «coger» в учебном содержимом: ${result.hits.length}. В Мексике это грубое слово — заменить по смыслу (agarrar, tomar, llevar), решение владельца 27.11.2026 (PROGRESS.md 3.16).`);
     return 1;

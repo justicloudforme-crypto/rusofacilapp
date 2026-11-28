@@ -3,6 +3,7 @@ import type { Locale } from "@/i18n/config";
 import type { Dictionary } from "@/i18n/dictionaries";
 import MatryoshkaMark from "./MatryoshkaMark";
 import PlayStoreBadge, { playTrademarkNote } from "./PlayStoreBadge";
+import SocialLinks from "./SocialLinks";
 
 export default function Footer({
   dict,
@@ -116,6 +117,8 @@ export default function Footer({
             {dict.footer.privacyLink}
           </Link>
         </div>
+        {/* Заход 7.320: Instagram и Facebook — значки 44×44, новая вкладка. */}
+        <SocialLinks lang={lang} />
         {/* Заход 7.258: приложение в Google Play. Подвала в приложении нет
             вовсе (выше), признак передан, чтобы правило было одно. */}
         <PlayStoreBadge lang={lang} nativeShell={nativeShell} placement="footer" />
