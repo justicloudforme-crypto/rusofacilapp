@@ -18,14 +18,19 @@
  *     · свой банк переводов — src/lib/word-bank-batches/batch-*.json
  *       (только поле `translation`: в `source` записана история, откуда
  *       слово, — там старый перевод карточки упомянут намеренно);
- *     · копии для ботов — bots/data/{vocabulary,idioms,exam_questions,glossary}.json.
+ *     · копии для ботов — bots/data/{vocabulary,idioms,exam_questions,glossary}.json;
+ *     · субтитры и тексты медиа — src/lib/media/mediaData.json (все строки, 7.321);
+ *     · рассказы, исходник сида — prisma/stories-data.ts (построчно, 7.321).
  *   База (`--db=<файл>`, по умолчанию `dev.db` в корне, если есть):
  *     · карточки     — FlashcardCard.translationEs, exampleEs;
  *     · идиомы       — Idiom.literalTranslation, spanishEquivalent,
  *                      explanation, contextExampleEs;
  *     · подсказки игр — WordGamePuzzle.words[].clue;
  *     · уроки и экзамены, перекрытые в базе, — Lesson.contentJson,
- *       Exam.contentJson (страница берёт строку базы раньше content.json).
+ *       Exam.contentJson (страница берёт строку базы раньше content.json);
+ *     · переводы рассказов — Story.translationEs, description, titleEs (7.321);
+ *     · субтитры медиа, перекрытые в базе, — MediaOverride.subtitles,
+ *       sourceNoteAppend (7.321).
  *   Боевую базу сторож не читает; её сверяет скрипт правки после записи.
  *   Фильтр ответов внешнего переводчика (решение владельца, вариант (б),
  *   заход 7.320) — `src/lib/no-coger-filter.ts`:
@@ -36,9 +41,8 @@
  *       `replaceCoger`, и карточка `StoryText` пропускает через него и ответ
  *       сети, и память вкладки (копии в кешах, легшие до фильтра).
  *
- * ЧЕГО НЕ СМОТРИТ (решение владельца — отдельно): переводы рассказов
- * (`Story.translationEs`, prisma/stories-data.ts) и субтитры медиа
- * (src/lib/media/mediaData.json, MediaOverride).
+ * С 7.321 (задание владельца 28.11.2026) смотрит и рассказы, и субтитры —
+ * в файлах и в базе; боевую базу правит `prisma/run-7321/fix-coger-stories-media.mjs`.
  *
  * ФОРМЫ. Всё, что начинается с «cog-»/«cóg-» (coger, coge, cogió, cogí,
  * cogerlo, cógelo, cogida…), и «coj-» с окончаниями глагола (cojo, coja,
@@ -75,8 +79,12 @@ const JSON_ALL = [
   ["бот: идиомы", "bots/data/idioms.json"],
   ["бот: экзамены", "bots/data/exam_questions.json"],
   ["бот: глоссарий", "bots/data/glossary.json"],
+  ["медиа: субтитры", "src/lib/media/mediaData.json"],
 ];
-const RAW = [["картинки слайдов", "src/lib/lessons/slideIcons.ts"]];
+const RAW = [
+  ["картинки слайдов", "src/lib/lessons/slideIcons.ts"],
+  ["рассказы (исходник)", "prisma/stories-data.ts"],
+];
 const BATCH_DIR = "src/lib/word-bank-batches";
 
 function walkStrings(value, at, out) {
@@ -122,6 +130,8 @@ const DB_FIELDS = [
   ["идиомы", `SELECT id, phrase AS label, literalTranslation, spanishEquivalent, explanation, contextExampleEs FROM "Idiom"`, ["literalTranslation", "spanishEquivalent", "explanation", "contextExampleEs"]],
   ["уроки в базе", `SELECT id, level || '-' || lessonSlug AS label, contentJson FROM "Lesson"`, ["contentJson"]],
   ["экзамены в базе", `SELECT id, level || '/' || examSlug AS label, contentJson FROM "Exam"`, ["contentJson"]],
+  ["рассказы", `SELECT id, title AS label, translationEs, description, titleEs FROM "Story"`, ["translationEs", "description", "titleEs"]],
+  ["субтитры медиа", `SELECT id, mediaId AS label, subtitles, sourceNoteAppend FROM "MediaOverride"`, ["subtitles", "sourceNoteAppend"]],
 ];
 
 async function scanDb(dbFile) {
@@ -213,6 +223,8 @@ const SCHEMA = [
   `CREATE TABLE "Lesson" (id TEXT, level TEXT, lessonSlug TEXT, contentJson TEXT)`,
   `CREATE TABLE "Exam" (id TEXT, level TEXT, examSlug TEXT, contentJson TEXT)`,
   `CREATE TABLE "WordGamePuzzle" (id TEXT, type TEXT, words TEXT)`,
+  `CREATE TABLE "Story" (id TEXT, title TEXT, translationEs TEXT, description TEXT, titleEs TEXT)`,
+  `CREATE TABLE "MediaOverride" (id TEXT, mediaId TEXT, subtitles TEXT, sourceNoteAppend TEXT)`,
 ];
 const CLEAN_ROWS = [
   [`INSERT INTO "FlashcardCard" VALUES ('c1','брать','tomar, agarrar (imperfectivo)','Ella siempre lleva un paraguas consigo.')`],
@@ -222,6 +234,8 @@ const CLEAN_ROWS = [
   [`INSERT INTO "Lesson" VALUES ('l1','b1','15','{"translation":"tomar, agarrar"}')`],
   [`INSERT INTO "Exam" VALUES ('e1','b1','b1-exam-2','{"right":"tomar, agarrar"}')`],
   [`INSERT INTO "WordGamePuzzle" VALUES ('p1','CROSSWORD','[{"word":"взять","clue":"tomar, agarrar (una vez, perfectivo)"}]')`],
+  [`INSERT INTO "Story" VALUES ('s1','Завтрак в семье','Kostia agarra la mochila. Liza recoge la mesa y escoge un libro.','Una familia desayuna.',NULL)`],
+  [`INSERT INTO "MediaOverride" VALUES ('m1','video-v-aeroportu-dialogo','[{"id":"line-3","ru":"Она берёт чемодан","es":"Ella agarra la maleta"},{"id":"line-4","ru":"Он хромает","es":"Él cojea y se encoge de hombros"}]',NULL)`],
 ];
 
 async function makeDb(dir, extra) {
@@ -281,6 +295,8 @@ const PLANTS = [
   ["свой банк: перевод «toma, coge»", (d) => editJson(d, `${BATCH_DIR}/batch-03.json`, (j) => { const e = j.entries.find((x) => x.word === "берёт"); if (!e) throw new Error("нет «берёт»"); e.translation = "toma, coge"; })],
   ["бот: пример карточки «Coge una cesta»", (d) => editJson(d, "bots/data/vocabulary.json", (j) => replaceFirstString(j, "Toma una cesta", "Coge una cesta"))],
   ["бот: идиома «cogerlo»", (d) => editJson(d, "bots/data/idioms.json", (j) => replaceFirstString(j, "por dónde agarrarlo", "por dónde cogerlo"))],
+  ["медиа: «Cojo una taza» вернулось в mediaData.json", (d) => editJson(d, "src/lib/media/mediaData.json", (j) => replaceFirstString(j, "Agarro una taza", "Cojo una taza"))],
+  ["рассказ в исходнике: «Kostia coge la mochila»", (d) => editRaw(d, "prisma/stories-data.ts", "Kostia agarra la mochila", "Kostia coge la mochila")],
 ];
 const DB_PLANTS = [
   ["база: перевод карточки «tomar, coger»", `INSERT INTO "FlashcardCard" VALUES ('x','взять','tomar, coger (una vez, perfectivo)','Tomó el libro.')`],
@@ -289,6 +305,9 @@ const DB_PLANTS = [
   ["база: подсказка игры «tomar, coger»", `INSERT INTO "WordGamePuzzle" VALUES ('x','WORD_SEARCH','[{"word":"брать","clue":"tomar, coger (imperfectivo)"}]')`],
   ["база: урок, перекрытый в базе, «cojan»", `INSERT INTO "Lesson" VALUES ('x','b2','14','{"t":"No cojan el paraguas"}')`],
   ["база: экзамен в базе «cogí»", `INSERT INTO "Exam" VALUES ('x','b1','b1-exam-2','{"right":"cogí"}')`],
+  ["база: перевод рассказа «Pável cogió el patinete»", `INSERT INTO "Story" VALUES ('x','Забастовка','Pável cogió el patinete viejo.','d',NULL)`],
+  ["база: субтитры медиа «Cojan los cuadernos»", `INSERT INTO "MediaOverride" VALUES ('x','video-x','[{"id":"line-1","ru":"Возьмите тетради","es":"Cojan los cuadernos"}]',NULL)`],
+  ["база: субтитры медиа «cógeme una nuez»", `INSERT INTO "MediaOverride" VALUES ('x','movie-vanka','[{"id":"line-2","ru":"возьми мне","es":"cógeme una nuez dorada"}]',NULL)`],
 ];
 
 /** Подмены фильтра: функция-пустышка, кривая замена, снятый вызов в адресе и в карточке. */
