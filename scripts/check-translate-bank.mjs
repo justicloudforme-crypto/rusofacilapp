@@ -204,8 +204,8 @@ function plant() {
   );
   planted(
     TRANSLATE,
-    "const translation = pickMyMemoryTranslation(data);",
-    "const translation = data.responseData?.translatedText as string | null;",
+    "const picked = pickMyMemoryTranslation(data);",
+    "const picked = data.responseData?.translatedText as string | null;",
     "подсадка: перевод берётся из ответа сервиса напрямую (долг 168) — поймано",
     "мимо разбора отказа",
   );
@@ -259,14 +259,14 @@ function plant() {
   );
   planted(
     READER,
-    "    const cached = readCachedTranslation(word);",
-    "    const cached = null as string | null;",
+    "    const remembered = readCachedTranslation(word);",
+    "    const remembered = null as string | null;",
     "подсадка: тап перестал смотреть в кэш вкладки — поймано",
     "не смотрит в кэш",
   );
   planted(
     READER,
-    "      cacheTranslation(word, data.translation);",
+    "      cacheTranslation(word, shown);",
     "",
     "подсадка: ответ словаря не кладётся в кэш — поймано",
     "не кладётся в кэш",

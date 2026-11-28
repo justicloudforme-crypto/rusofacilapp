@@ -18,7 +18,8 @@
  *      в) `robots.ts` не закрывает `/es/download` и `/ru/download` (тем же
  *         матчером, что и `crawlable-surface.test.ts`);
  *      г) `organizationJsonLd` несёт `sameAs: [PLAY_STORE_URL]` только вне
- *         приложения, а каждый её вызов (и `websiteJsonLd`) передаёт
+ *         приложения (с 7.320 — плюс Instagram и Facebook из
+ *         `social-links.ts`, им можно и в ответе приложению), а каждый её вызов (и `websiteJsonLd`) передаёт
  *         признак приложения с сервера, а не буквальное `false`.
  *   2. ЖИВАЯ (`--base=…`):
  *      а) `/es/download` и `/ru/download` в браузере — 200, ни `noindex` в
@@ -28,7 +29,7 @@
  *      в) отданный `/robots.txt` их не закрывает;
  *      г) у каждой `Organization` в JSON-LD главной и «О проекте» (обе
  *         локали, включая вложенную в `WebSite.publisher`) в `sameAs` —
- *         страница Google Play; в ответе ПРИЛОЖЕНИЮ этих страниц адреса
+ *         страница Google Play и оба профиля соцсетей (7.320); в ответе ПРИЛОЖЕНИЮ этих страниц адреса
  *         магазина нет вовсе, `Organization` при этом есть (иначе «нет
  *         sameAs» доказано пустотой), а `/download` приложению — `noindex`.
  *      Пустая выборка — красная.
@@ -62,6 +63,7 @@ import { isEntryPoint } from "../src/lib/entry-point";
 import { isDisallowed, parseRobotsTxt, decidingRule } from "../src/lib/robots-matcher";
 import { formatMoney, plans } from "../src/lib/plans";
 import { pricingOffersJsonLd } from "../src/lib/pricing-display";
+import { SOCIAL_PROFILE_URLS } from "../src/lib/social-links";
 
 export const PLAY_URL = "https://play.google.com/store/apps/details?id=com.rusofacilapp.app";
 const LANGS = ["es", "ru"] as const;
@@ -121,9 +123,10 @@ export function judgeStatic(f: Files): string[] {
   if (!/export function organizationJsonLd\(lang: Locale, nativeShell: boolean\)/.test(org)) {
     bad.push(`${FILES.site}: organizationJsonLd не принимает признак приложения — адрес магазина попадёт в ответ приложению`);
   }
-  if (!/\.\.\.\(nativeShell \? \{\} : \{ sameAs: \[PLAY_STORE_URL\] \}\)/.test(org)) {
-    bad.push(`${FILES.site}: у Organization нет sameAs: [PLAY_STORE_URL] вне приложения`);
+  if (!/sameAs: nativeShell \? \[\.\.\.SOCIAL_PROFILE_URLS\] : \[PLAY_STORE_URL, \.\.\.SOCIAL_PROFILE_URLS\],/.test(org)) {
+    bad.push(`${FILES.site}: у Organization нет sameAs: [PLAY_STORE_URL] вне приложения (и соцсетей из social-links.ts)`);
   }
+  if (!/import \{ SOCIAL_PROFILE_URLS \} from "@\/lib\/social-links";/.test(site)) bad.push(`${FILES.site}: профили соцсетей не из social-links.ts`);
   if (!/import \{ PLAY_STORE_URL \} from "@\/lib\/pwa-manifest";/.test(site)) bad.push(`${FILES.site}: PLAY_STORE_URL не из pwa-manifest.ts — адрес магазина записан второй раз`);
   if (!/publisher: organizationJsonLd\(lang, nativeShell\)/.test(site)) bad.push(`${FILES.site}: WebSite.publisher не передаёт признак приложения`);
 
@@ -420,6 +423,7 @@ export function judgeLive(s: Snapshot): string[] {
       const same = Array.isArray(o.sameAs) ? o.sameAs : o.sameAs ? [o.sameAs] : [];
       if (o.__broken) bad.push(`${p.path} (браузер): JSON-LD не разбирается`);
       else if (!same.includes(PLAY_URL)) bad.push(`${p.path} (браузер): у Organization sameAs ${JSON.stringify(same)} — нет страницы Google Play`);
+      else for (const url of SOCIAL_PROFILE_URLS) if (!same.includes(url)) bad.push(`${p.path} (браузер): у Organization sameAs ${JSON.stringify(same)} — нет профиля ${url}`);
     }
   }
   for (const p of s.app.filter((x) => ORG_PAGES.includes(x.path))) {
@@ -477,8 +481,9 @@ function staticMain(plant: boolean): number {
       ["ответ приложению /download потерял noindex", edit(FILES.download, "description: copy.body, robots: { index: false }, alternates", "description: copy.body, alternates"), "нет noindex"],
       ["/download вычеркнут из карты сайта", edit(FILES.sitemap, /\n {4}"\/download",/, ""), "нет в staticPaths"],
       ["robots.txt закрывает /download", edit(FILES.robots, '          "/api/",', '          "/api/",\n          "/*/download",'), "закрыт robots.txt"],
-      ["sameAs убран из Organization", edit(FILES.site, "    ...(nativeShell ? {} : { sameAs: [PLAY_STORE_URL] }),\n", ""), "нет sameAs"],
-      ["sameAs выдаётся и приложению", edit(FILES.site, "...(nativeShell ? {} : { sameAs: [PLAY_STORE_URL] })", "sameAs: [PLAY_STORE_URL]"), "нет sameAs"],
+      ["sameAs убран из Organization", edit(FILES.site, "    sameAs: nativeShell ? [...SOCIAL_PROFILE_URLS] : [PLAY_STORE_URL, ...SOCIAL_PROFILE_URLS],\n", ""), "нет sameAs"],
+      ["sameAs выдаётся и приложению", edit(FILES.site, "sameAs: nativeShell ? [...SOCIAL_PROFILE_URLS] : [PLAY_STORE_URL, ...SOCIAL_PROFILE_URLS],", "sameAs: [PLAY_STORE_URL, ...SOCIAL_PROFILE_URLS],"), "нет sameAs"],
+      ["соцсети убраны из sameAs (7.320)", edit(FILES.site, "sameAs: nativeShell ? [...SOCIAL_PROFILE_URLS] : [PLAY_STORE_URL, ...SOCIAL_PROFILE_URLS],", "sameAs: nativeShell ? [] : [PLAY_STORE_URL],"), "нет sameAs"],
       ["главная передаёт буквальное false", edit(FILES.home, "organizationJsonLd(lang, nativeShell)", "organizationJsonLd(lang, false)"), "не с сервера"],
       ["«О проекте» передаёт буквальное false", edit(FILES.about, "organizationJsonLd(lang, nativeShell)", "organizationJsonLd(lang, false)"), "не с сервера"],
       ["разметка цен снова из copy (как до 7.260)", edit(FILES.pricingDisplay, "price: BASE_OFFERS[plan].price,", "price: copy.offers[plan].price,"), "не из BASE_OFFERS"],
@@ -521,7 +526,8 @@ async function liveMain(base: string, plant: boolean): Promise<number> {
       ["X-Robots-Tag: noindex у /ru/download", { ...s, web: map(s.web, (p) => (p.path === "/ru/download" ? { ...p, robotsHeader: "noindex" } : p)) }],
       ["/download вычеркнут из карты", { ...s, sitemap: (s.sitemap ?? "").replace(/<url>(?:(?!<\/url>)[\s\S])*?\/es\/download<\/loc>[\s\S]*?<\/url>/, "") }],
       ["robots.txt закрывает /download", { ...s, robots: `${s.robots ?? ""}\nDisallow: /*/download\n` }],
-      ["sameAs пропал у Organization главной", { ...s, web: map(s.web, (p) => (p.path === "/ru" ? { ...p, html: p.html.replaceAll(`"sameAs":["${PLAY_URL}"]`, '"sameAs":[]') } : p)) }],
+      ["Google Play пропал из sameAs главной", { ...s, web: map(s.web, (p) => (p.path === "/ru" ? { ...p, html: p.html.replaceAll(`"sameAs":["${PLAY_URL}",`, '"sameAs":[') } : p)) }],
+      ["Instagram пропал из sameAs «О проекте» (7.320)", { ...s, web: map(s.web, (p) => (p.path === "/ru/sobre-nosotros" ? { ...p, html: p.html.replaceAll(`"${SOCIAL_PROFILE_URLS[0]}"`, '"https://example.com/"') } : p)) }],
       ["sameAs ведёт на чужой пакет", { ...s, web: map(s.web, (p) => (p.path === "/es/sobre-nosotros" ? { ...p, html: p.html.replaceAll(PLAY_URL, "https://play.google.com/store/apps/details?id=x") } : p)) }],
       ["sameAs подсажен в ответ приложению", { ...s, app: map(s.app, (p) => (p.path === "/es" ? { ...p, html: p.html.replace('"@type":"Organization",', `"@type":"Organization","sameAs":["${PLAY_URL}"],`) } : p)) }],
       ["ответ браузера выдан за ответ приложения", { ...s, app: s.web }],

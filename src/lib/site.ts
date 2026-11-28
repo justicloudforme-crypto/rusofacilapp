@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { defaultLocale, locales, type Locale } from "@/i18n/config";
 import { PLAY_STORE_URL } from "@/lib/pwa-manifest";
+import { SOCIAL_PROFILE_URLS } from "@/lib/social-links";
 
 // Canonical production origin, used for absolute URLs in robots.ts,
 // sitemap.ts, canonical/hreflang metadata, and JSON-LD. No env var for this
@@ -228,7 +229,8 @@ const ORGANIZATION_DESCRIPTION: Record<Locale, string> = {
  * закрытая группа, а не профиль; App Store-листинга нет. ТОЛЬКО в ответе
  * браузеру: в ответе приложению адреса магазина нет нигде, даже в
  * разметке для поисковиков (`check:play-link`, живая половина) — поисковик
- * ответа приложения не видит, а проверяющий Play видит исходный код. */
+ * ответа приложения не видит, а проверяющий Play видит исходный код.
+ * Заход 7.320: к ней добавлены Instagram и Facebook (решение владельца). */
 export function organizationJsonLd(lang: Locale, nativeShell: boolean) {
   return {
     "@context": "https://schema.org",
@@ -237,7 +239,9 @@ export function organizationJsonLd(lang: Locale, nativeShell: boolean) {
     url: SITE_URL,
     logo: `${SITE_URL}/icon.png`,
     description: ORGANIZATION_DESCRIPTION[lang],
-    ...(nativeShell ? {} : { sameAs: [PLAY_STORE_URL] }),
+    // Заход 7.320: + Instagram и Facebook (`social-links.ts`) — им можно и в
+    // ответе приложению; адрес магазина — по-прежнему только браузеру.
+    sameAs: nativeShell ? [...SOCIAL_PROFILE_URLS] : [PLAY_STORE_URL, ...SOCIAL_PROFILE_URLS],
   };
 }
 
